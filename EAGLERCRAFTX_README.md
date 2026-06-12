@@ -161,6 +161,10 @@ The default eaglercraftXOpts values is this:
 - `ramdiskMode:` if worlds and resource packs should be stored in RAM instead of IndexedDB
 - `singleThreadMode:` if the game should run the client and integrated server in the same context instead of creating a worker object
 - `enableEPKVersionCheck:` if the game should attempt to bypass the browser's cache and retry downloading assets.epk when its outdated
+- `enableLODSystem:` enables the experimental distant terrain rendering system
+- `lodDrawDistance:` maximum distance in chunks for distant terrain (Default: 128)
+- `lodResolution:` detail level of LOD meshes (1-4, higher is lower detail)
+- `lodMaxMemoryMB:` maximum heap size for the LOD cache
 - `enforceVSync:` (WASM only) if the game should automatically re-enable VSync at launch if its disabled
 - `keepAliveHack:` if the game should embed a looping `<audio>` tag to keep the tab from becoming inactive on Chrome
 - `finishOnSwap:` if the WebGL `finish` function should be called after every frame when VSync is disabled

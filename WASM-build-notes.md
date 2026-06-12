@@ -32,7 +32,7 @@ chmod +x gradlew
 After setup, run these commands to compile the WASM bundle:
 
 ```bash
-cd /workspaces/eaglercraftx-1.8-workspace && export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 && export PATH="$JAVA_HOME/bin:$PATH" && ./gradlew :target_teavm_wasm_gc:assembleMainComponents --stacktrace && ./gradlew :target_teavm_wasm_gc:makeMainWasmClientBundle --no-daemon --stacktrace
+cd /workspaces/DARVY-EaglercraftX-1.8-workspace && export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 && export PATH="$JAVA_HOME/bin:$PATH" && ./gradlew :target_teavm_wasm_gc:assembleMainComponents :target_teavm_wasm_gc:makeMainWasmClientBundle --no-daemon --stacktrace
 ```
 
 The output files will be generated in `target_teavm_wasm_gc/javascript_dist/` and the bundle will be created as `EaglercraftX_1.8_WASM-GC_Offline_Download.html`.

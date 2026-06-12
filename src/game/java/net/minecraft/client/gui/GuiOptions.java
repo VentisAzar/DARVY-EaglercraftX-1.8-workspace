@@ -126,13 +126,15 @@ public class GuiOptions extends GuiScreen implements GuiYesNoCallback {
 		this.buttonList.add(new GuiButton(103, this.width / 2 + 5, this.height / 6 + 120 - 6, 150, 20,
 				I18n.format("options.chat.title", new Object[0])));
 		GuiButton btn;
-		this.buttonList.add(btn = new GuiButton(105, this.width / 2 - 155, this.height / 6 + 144 - 6, 150, 20,
+		this.buttonList.add(new GuiButton(9000, this.width / 2 - 155, this.height / 6 + 144 - 6, 150, 20,
+				"Distant Darvy..."));
+		this.buttonList.add(btn = new GuiButton(105, this.width / 2 + 5, this.height / 6 + 144 - 6, 150, 20,
 				I18n.format("options.resourcepack", new Object[0])));
 		btn.enabled = EaglerFolderResourcePack.isSupported();
-		this.buttonList.add(btn = new GuiButton(104, this.width / 2 + 5, this.height / 6 + 144 - 6, 150, 20,
+		this.buttonList.add(btn = new GuiButton(104, this.width / 2 - 100, this.height / 6 + 168, 200, 20,
 				I18n.format("options.debugConsoleButton", new Object[0])));
 		btn.enabled = EagRuntime.getPlatformType() != EnumPlatformType.DESKTOP;
-		this.buttonList.add(new GuiButton(200, this.width / 2 - 100, this.height / 6 + 168,
+		this.buttonList.add(new GuiButton(200, this.width / 2 - 100, this.height / 6 + 192,
 				I18n.format("gui.done", new Object[0])));
 	}
 
@@ -217,6 +219,10 @@ public class GuiOptions extends GuiScreen implements GuiYesNoCallback {
 			if (parGuiButton.id == 102) {
 				this.mc.gameSettings.saveOptions();
 				this.mc.displayGuiScreen(new GuiLanguage(this, this.game_settings_1, this.mc.getLanguageManager()));
+			}
+
+			if (parGuiButton.id == 9000) {
+				this.mc.displayGuiScreen(new GuiLODConfig(this));
 			}
 
 			if (parGuiButton.id == 103) {
