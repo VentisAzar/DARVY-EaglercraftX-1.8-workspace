@@ -73,11 +73,11 @@ public class GuiLODConfig extends GuiScreen {
         
         // Sodium-style description area
         int boxX = this.width / 2 - 155;
-        int boxY = this.height / 4 + 85;
+        int boxY = this.height / 4 + 75;
         drawRect(boxX, boxY, boxX + 310, boxY + 70, 0x99000000); // Darker background
         drawHorizontalLine(boxX, boxX + 310, boxY, 0xFFAA00); // Orange Sodium accent
         this.drawString(this.fontRendererObj, "Distant Darvy v1.0", boxX + 5, boxY + 8, 0xFFAA00);
-        this.fontRendererObj.drawSplitString("Renders terrain far beyond Minecraft's limits using LOD geometry. Optimization: Skip " + (LODTerrainManager.lodResolution - 1) + " blocks during scanning to save memory.", 
+        this.fontRendererObj.drawSplitString("Optimized chunk loading active. Using direct biome array access to prevent browser memory leaks. Resolution is set to sample every " + LODTerrainManager.lodResolution + " blocks.", 
                 boxX + 5, boxY + 22, 300, 0xBBBBBB);
         
         super.drawScreen(mouseX, mouseY, partialTicks);
