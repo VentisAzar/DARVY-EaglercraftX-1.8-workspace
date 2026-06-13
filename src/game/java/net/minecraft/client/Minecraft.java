@@ -887,6 +887,9 @@ public class Minecraft implements IThreadListener {
 
 		if (!this.skipRenderWorld) {
 			this.entityRenderer.func_181560_a(this.timer.renderPartialTicks, i);
+			GlStateManager.disableDepth(); // Ensure LODs are visible through horizon fog
+			LODTerrainManager.instance.renderLODs();
+			GlStateManager.enableDepth();
 		}
 
 		this.guiAchievement.updateAchievementWindow();

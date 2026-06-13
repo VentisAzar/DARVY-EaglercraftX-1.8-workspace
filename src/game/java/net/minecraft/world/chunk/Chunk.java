@@ -35,6 +35,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.lax1dude.eaglercraft.v1_8.log4j.LogManager;
 import net.lax1dude.eaglercraft.v1_8.log4j.Logger;
 import net.lax1dude.eaglercraft.v1_8.opengl.ext.deferred.DeferredStateManager;
+import net.minecraft.client.LODTerrainManager;
 
 /**+
  * This portion of EaglercraftX contains deobfuscated Minecraft 1.8 source code.
@@ -1027,6 +1028,8 @@ public class Chunk {
 		for (TileEntity tileentity : this.chunkTileEntityMap.values()) {
 			tileentity.updateContainingBlockInfo();
 		}
+
+		LODTerrainManager.instance.processChunk(this);
 
 	}
 

@@ -4,6 +4,9 @@ import com.carrotsearch.hppc.LongByteHashMap;
 import com.carrotsearch.hppc.LongIntHashMap;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.util.BlockPos;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.world.biome.BiomeGenBase;
 
 /**
@@ -11,6 +14,8 @@ import net.minecraft.world.biome.BiomeGenBase;
  * Optimized for WebGL/WASM-GC resource constraints.
  */
 public class LODTerrainManager {
+
+    public static final LODTerrainManager instance = new LODTerrainManager();
 
     // Configuration settings - Source of truth for Distant Darvy
     public static boolean enableLODSystem = true;
@@ -28,51 +33,79 @@ public class LODTerrainManager {
      * Scans a standard Minecraft chunk and compresses it into a surface map.
      * Uses mutable objects to prevent browser memory leaks.
      */
-    public void processChunk(Chunk chunk) {
+    public synchronized void processChunk(Chunk chunk) {
         if (!enableLODSystem) return;
 
         int chunkX = chunk.xPosition;
         int chunkZ = chunk.zPosition;
-        long regionKey = getRegionKey(chunkX, chunkZ);
-        
-        // CRAZY OPTIMIZATION: Access raw biome data directly from the chunk
-        byte[] biomeArray = chunk.getBiomeArray(); 
+
+        // CRAZY OPTIMIZATION: Access raw biome data array directly to avoid getBiome() overhead
+        byte[] biomeArray = chunk.getBiomeArray();
         BiomeGenBase[] biomeList = BiomeGenBase.getBiomeGenArray();
 
         int step = lodResolution; 
         for (int x = 0; x < CHUNK_SIZE; x += step) {
             for (int z = 0; z < CHUNK_SIZE; z += step) {
+                // We calculate height directly to avoid BlockPos churn
                 int y = chunk.getHeightValue(x, z);
                 
-                // Direct index into the 16x16 biome array (z << 4 | x)
-                int biomeId = biomeArray[z << 4 | x] & 255;
-                int color = biomeList[biomeId] != null ? biomeList[biomeId].color : BiomeGenBase.plains.color;
-                
+                // CRAZY OPTIMIZATION: Ultra-fast bitwise index for 16x16 array
+                int biomeId = biomeArray[(z << 4) | x] & 0xFF;
+                int color = (biomeId < biomeList.length && biomeList[biomeId] != null)
+                        ? biomeList[biomeId].color
+                        : 0xFFFFFF; // Default white if biome is null
+
                 long blockKey = ((long)(chunkX * CHUNK_SIZE + x) << 32) | ((chunkZ * CHUNK_SIZE + z) & 0xFFFFFFFFL);
                 heightmapCache.put(blockKey, (byte)y);
                 biomeColorCache.put(blockKey, color);
             }
         }
-        requestMeshUpdate(regionKey);
-    }
-
-    private void requestMeshUpdate(long regionKey) {
-        // Asynchronous worker mesh generation logic
-    }
-
-    private long getRegionKey(int cx, int cz) {
-        return ((long)(cx / REGION_SIZE) << 32) | ((cz / REGION_SIZE) & 0xFFFFFFFFL);
     }
 
     public void cleanup(int playerX, int playerZ, int maxDistance) {}
     
-    public void renderLODs() {
+    /**
+     * Renders the cached terrain data using the Tessellator.
+     * Optimized to draw simple quads at a distance.
+     */
+    public synchronized void renderLODs() {
         if (!enableLODSystem || heightmapCache.isEmpty()) return;
 
-        // This is where the WebGL batching happens.
-        // For now, we can verify it's working by checking the cache size in debug mode.
-        // The system is now holding: heightmapCache.size() points.
+        Minecraft mc = Minecraft.getMinecraft();
+        double dX = mc.getRenderManager().viewerPosX;
+        double dY = mc.getRenderManager().viewerPosY;
+        double dZ = mc.getRenderManager().viewerPosZ;
+
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+
+        // Render as simple colored quads
+        worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
         
-        // TODO: GL11.glDrawArrays integration for the LOD mesh
+        long[] keys = heightmapCache.keys;
+        byte[] heights = heightmapCache.values;
+        boolean[] allocated = heightmapCache.allocated;
+
+        for (int i = 0; i < keys.length; ++i) {
+            if (allocated[i]) {
+                long key = keys[i];
+                int x = (int) (key >> 32);
+                int z = (int) (key & 0xFFFFFFFFL);
+                int y = heights[i] & 255;
+                int color = biomeColorCache.get(key);
+
+                float r = (float)(color >> 16 & 255) / 255.0F;
+                float g = (float)(color >> 8 & 255) / 255.0F;
+                float b = (float)(color & 255) / 255.0F;
+
+                // Draw a simple 1x1 quad for the LOD point
+                worldrenderer.pos((double)x - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
+                worldrenderer.pos((double)x - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
+                worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
+                worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
+            }
+        }
+        
+        tessellator.draw();
     }
 }
