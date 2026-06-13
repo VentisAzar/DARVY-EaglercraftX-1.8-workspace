@@ -69,6 +69,7 @@ public class GuiLODConfig extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
+        GlStateManager.disableDepth(); // Fix: Ensure GUI renders over the world
         this.drawCenteredString(this.fontRendererObj, this.screenTitle, this.width / 2, 15, 16777215);
         
         // Sodium-style description area - Bug fix: Reset state and enable blending

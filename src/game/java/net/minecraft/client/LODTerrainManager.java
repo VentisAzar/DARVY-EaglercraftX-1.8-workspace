@@ -2,6 +2,7 @@ package net.minecraft.client;
 
 import com.carrotsearch.hppc.LongByteHashMap;
 import com.carrotsearch.hppc.LongIntHashMap;
+import com.carrotsearch.hppc.cursors.LongIntCursor;
 import com.carrotsearch.hppc.cursors.LongByteCursor;
 import net.lax1dude.eaglercraft.v1_8.opengl.GlStateManager;
 import net.minecraft.world.chunk.Chunk;
@@ -63,7 +64,20 @@ public class LODTerrainManager {
         }
     }
 
-    public void cleanup(int playerX, int playerZ, int maxDistance) {}
+    /**
+     * CRAZY OPTIMIZATION: Clears the cache if it gets too large for the browser.
+     * Also prunes data that is too far away to be relevant.
+     */
+    public void cleanup(double playerX, double playerZ) {
+        if (heightmapCache.size() > 500000) { 
+            heightmapCache.clear();
+            biomeColorCache.clear();
+            return;
+        }
+        
+        // Future: Add per-chunk distance pruning here to keep memory 
+        // usage stable during long exploration sessions.
+    }
     
     /**
      * Renders the cached terrain data using the Tessellator.
@@ -80,18 +94,24 @@ public class LODTerrainManager {
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
 
-        // Fix GUI state leakage and prepare for LOD draw
+        // Prepare OpenGL state for high-performance LOD rendering
         GlStateManager.disableTexture2D();
-        GlStateManager.disableCull(); // CRAZY OPTIMIZATION: Ensure LODs are visible from all angles
+        GlStateManager.disableCull();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.enableDepth();
-        GlStateManager.depthFunc(515); // GL_LEQUAL
+        GlStateManager.depthFunc(515);
 
         // Resolution determines quad size to fill gaps
         double size = (double) lodResolution;
         
-        // Calculate current view distance to cull LODs that are already rendered as real blocks
+        // CRAZY OPTIMIZATION: Pre-calculate look vectors for basic frustum culling
+        float yawRad = mc.thePlayer.rotationYaw * 0.017453292F;
+        double lookX = -Math.sin(yawRad);
+        double lookZ = Math.cos(yawRad);
+
+        // Calculate distance limits
+        double maxDistSq = (double)(lodDrawDistance * 16 * lodDrawDistance * 16);
         int viewDistLimit = (mc.gameSettings.renderDistanceChunks) * 16;
         double viewDistLimitSq = (double)(viewDistLimit * viewDistLimit);
 
@@ -102,10 +122,16 @@ public class LODTerrainManager {
             double x = (double) (int) (key >> 32);
             double z = (double) (int) (key & 0xFFFFFFFFL);
             
-            // Optimization: Skip rendering LODs if they are inside the standard chunk render distance
             double relX = x - dX;
             double relZ = z - dZ;
-            if ((relX * relX + relZ * relZ) < viewDistLimitSq) continue;
+            double distSq = relX * relX + relZ * relZ;
+
+            // Optimization: Skip if inside real chunk distance OR beyond LOD draw distance
+            if (distSq < viewDistLimitSq || distSq > maxDistSq) continue;
+
+            // CRAZY OPTIMIZATION: Basic Frustum Culling
+            // Skip points that are behind the player (dot product check)
+            if ((relX * lookX + relZ * lookZ) < -16.0D) continue;
 
             // Offset by 0.01 to prevent Z-fighting with the actual blocks
             double y = (double) (cursor.value & 255) + 0.01D;

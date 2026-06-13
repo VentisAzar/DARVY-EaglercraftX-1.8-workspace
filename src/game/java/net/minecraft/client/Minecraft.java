@@ -1224,6 +1224,11 @@ public class Minecraft implements IThreadListener {
 
 		VoiceClientController.tickVoiceClient();
 
+		if (this.thePlayer != null && this.joinWorldTickCounter % 100 == 0) {
+			// Periodic cache cleanup
+			LODTerrainManager.instance.cleanup(this.thePlayer.posX, this.thePlayer.posZ);
+		}
+
 		this.entityRenderer.getMouseOver(1.0F);
 		if (!this.isGamePaused && this.theWorld != null) {
 			this.playerController.updateController();
