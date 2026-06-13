@@ -887,7 +887,7 @@ public class Minecraft implements IThreadListener {
 
 		if (!this.skipRenderWorld) {
 			this.entityRenderer.func_181560_a(this.timer.renderPartialTicks, i);
-u54			// Render LODs with depth testing enabled so they sit behind actual blocks
+			// Render LODs with depth testing enabled so they sit behind actual blocks
 			LODTerrainManager.instance.renderLODs();
 		}
 

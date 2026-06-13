@@ -5,7 +5,6 @@ import com.carrotsearch.hppc.LongIntHashMap;
 import com.carrotsearch.hppc.cursors.LongByteCursor;
 import net.lax1dude.eaglercraft.v1_8.opengl.GlStateManager;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.util.BlockPos;
 import net.minecraft.client.renderer.Tessellator;
 import net.lax1dude.eaglercraft.v1_8.opengl.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -83,6 +82,7 @@ public class LODTerrainManager {
 
         // Fix GUI state leakage and prepare for LOD draw
         GlStateManager.disableTexture2D();
+        GlStateManager.disableCull(); // CRAZY OPTIMIZATION: Ensure LODs are visible from all angles
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.enableDepth();
@@ -107,7 +107,8 @@ public class LODTerrainManager {
             double relZ = z - dZ;
             if ((relX * relX + relZ * relZ) < viewDistLimitSq) continue;
 
-            double y = (double) (cursor.value & 255);
+            // Offset by 0.01 to prevent Z-fighting with the actual blocks
+            double y = (double) (cursor.value & 255) + 0.01D;
             int color = biomeColorCache.get(key);
 
             float r = (float)(color >> 16 & 255) / 255.0F;
@@ -123,6 +124,7 @@ public class LODTerrainManager {
         
         tessellator.draw();
         GlStateManager.disableBlend();
+        GlStateManager.enableCull();
         GlStateManager.enableTexture2D();
     }
 }
