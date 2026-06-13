@@ -2,10 +2,12 @@ package net.minecraft.client;
 
 import com.carrotsearch.hppc.LongByteHashMap;
 import com.carrotsearch.hppc.LongIntHashMap;
+import com.carrotsearch.hppc.cursors.LongByteCursor;
+import net.lax1dude.eaglercraft.v1_8.opengl.GlStateManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.util.BlockPos;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
+import net.lax1dude.eaglercraft.v1_8.opengl.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.world.biome.BiomeGenBase;
 
@@ -79,33 +81,32 @@ public class LODTerrainManager {
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
 
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableCull();
+
         // Render as simple colored quads
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
         
-        long[] keys = heightmapCache.keys;
-        byte[] heights = heightmapCache.values;
-        boolean[] allocated = heightmapCache.allocated;
+        for (LongByteCursor cursor : heightmapCache) {
+            long key = cursor.key;
+            int x = (int) (key >> 32);
+            int z = (int) (key & 0xFFFFFFFFL);
+            int y = cursor.value & 255;
+            int color = biomeColorCache.get(key);
 
-        for (int i = 0; i < keys.length; ++i) {
-            if (allocated[i]) {
-                long key = keys[i];
-                int x = (int) (key >> 32);
-                int z = (int) (key & 0xFFFFFFFFL);
-                int y = heights[i] & 255;
-                int color = biomeColorCache.get(key);
+            float r = (float)(color >> 16 & 255) / 255.0F;
+            float g = (float)(color >> 8 & 255) / 255.0F;
+            float b = (float)(color & 255) / 255.0F;
 
-                float r = (float)(color >> 16 & 255) / 255.0F;
-                float g = (float)(color >> 8 & 255) / 255.0F;
-                float b = (float)(color & 255) / 255.0F;
-
-                // Draw a simple 1x1 quad for the LOD point
-                worldrenderer.pos((double)x - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
-                worldrenderer.pos((double)x - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
-                worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
-                worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
-            }
+            // Draw a simple 1x1 quad for the LOD point
+            worldrenderer.pos((double)x - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
+            worldrenderer.pos((double)x - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
+            worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
+            worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
         }
         
         tessellator.draw();
+        GlStateManager.enableCull();
+        GlStateManager.enableTexture2D();
     }
 }
