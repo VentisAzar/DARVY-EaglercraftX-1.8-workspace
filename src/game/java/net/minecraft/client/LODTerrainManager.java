@@ -4,7 +4,7 @@ import com.carrotsearch.hppc.LongByteHashMap;
 import com.carrotsearch.hppc.LongIntHashMap;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraft.world.biome.BiomeGenBase;
 
 /**
  * Distant Darvy Manager - High Performance LOD System for EaglercraftX
@@ -34,15 +34,19 @@ public class LODTerrainManager {
         int chunkX = chunk.xPosition;
         int chunkZ = chunk.zPosition;
         long regionKey = getRegionKey(chunkX, chunkZ);
-        byte[] biomeArray = chunk.getBiomeArray();
+        
+        // CRAZY OPTIMIZATION: Access raw biome data directly from the chunk
+        byte[] biomeArray = chunk.getBiomeArray(); 
+        BiomeGenBase[] biomeList = BiomeGenBase.getBiomeGenArray();
 
         int step = lodResolution; 
         for (int x = 0; x < CHUNK_SIZE; x += step) {
             for (int z = 0; z < CHUNK_SIZE; z += step) {
                 int y = chunk.getHeightValue(x, z);
                 
-                // CRAZY OPTIMIZATION: Direct array access instead of BlockPos object churn
-                int color = chunk.getWorld().getWorldChunkManager().getBiomeGenAt(chunkX * 16 + x, chunkZ * 16 + z).color;
+                // Direct index into the 16x16 biome array (z << 4 | x)
+                int biomeId = biomeArray[z << 4 | x] & 255;
+                int color = biomeList[biomeId] != null ? biomeList[biomeId].color : BiomeGenBase.plains.color;
                 
                 long blockKey = ((long)(chunkX * CHUNK_SIZE + x) << 32) | ((chunkZ * CHUNK_SIZE + z) & 0xFFFFFFFFL);
                 heightmapCache.put(blockKey, (byte)y);
