@@ -71,11 +71,17 @@ public class GuiLODConfig extends GuiScreen {
         this.drawDefaultBackground();
         this.drawCenteredString(this.fontRendererObj, this.screenTitle, this.width / 2, 15, 16777215);
         
-        // Sodium-style description area
+        // Sodium-style description area - Bug fix: Reset state and enable blending
+        GlStateManager.enableBlend();
+        GlStateManager.disableTexture2D();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+
         int boxX = this.width / 2 - 155;
         int boxY = this.height / 4 + 75;
         drawRect(boxX, boxY, boxX + 310, boxY + 70, 0x99000000); // Darker background
         drawHorizontalLine(boxX, boxX + 310, boxY, 0xFFAA00); // Orange Sodium accent
+        GlStateManager.enableTexture2D();
+
         this.drawString(this.fontRendererObj, "Distant Darvy v1.0", boxX + 5, boxY + 8, 0xFFAA00);
         this.fontRendererObj.drawSplitString("Optimized chunk loading active. Using direct biome array access to prevent browser memory leaks. Resolution is set to sample every " + LODTerrainManager.lodResolution + " blocks.", 
                 boxX + 5, boxY + 22, 300, 0xBBBBBB);

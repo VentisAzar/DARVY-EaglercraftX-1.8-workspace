@@ -81,32 +81,48 @@ public class LODTerrainManager {
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
 
+        // Fix GUI state leakage and prepare for LOD draw
         GlStateManager.disableTexture2D();
-        GlStateManager.disableCull();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.enableDepth();
+        GlStateManager.depthFunc(515); // GL_LEQUAL
 
-        // Render as simple colored quads
+        // Resolution determines quad size to fill gaps
+        double size = (double) lodResolution;
+        
+        // Calculate current view distance to cull LODs that are already rendered as real blocks
+        int viewDistLimit = (mc.gameSettings.renderDistanceChunks) * 16;
+        double viewDistLimitSq = (double)(viewDistLimit * viewDistLimit);
+
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
         
         for (LongByteCursor cursor : heightmapCache) {
             long key = cursor.key;
-            int x = (int) (key >> 32);
-            int z = (int) (key & 0xFFFFFFFFL);
-            int y = cursor.value & 255;
+            double x = (double) (int) (key >> 32);
+            double z = (double) (int) (key & 0xFFFFFFFFL);
+            
+            // Optimization: Skip rendering LODs if they are inside the standard chunk render distance
+            double relX = x - dX;
+            double relZ = z - dZ;
+            if ((relX * relX + relZ * relZ) < viewDistLimitSq) continue;
+
+            double y = (double) (cursor.value & 255);
             int color = biomeColorCache.get(key);
 
             float r = (float)(color >> 16 & 255) / 255.0F;
             float g = (float)(color >> 8 & 255) / 255.0F;
             float b = (float)(color & 255) / 255.0F;
 
-            // Draw a simple 1x1 quad for the LOD point
-            worldrenderer.pos((double)x - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
-            worldrenderer.pos((double)x - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
-            worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z + 1.0D - dZ).color(r, g, b, 1.0F).endVertex();
-            worldrenderer.pos((double)x + 1.0D - dX, (double)y - dY, (double)z - dZ).color(r, g, b, 1.0F).endVertex();
+            // CRAZY OPTIMIZATION: Quads are sized based on resolution to ensure a solid terrain look
+            worldrenderer.pos(x - dX, y - dY, z - dZ).color(r, g, b, 1.0F).endVertex();
+            worldrenderer.pos(x - dX, y - dY, z + size - dZ).color(r, g, b, 1.0F).endVertex();
+            worldrenderer.pos(x + size - dX, y - dY, z + size - dZ).color(r, g, b, 1.0F).endVertex();
+            worldrenderer.pos(x + size - dX, y - dY, z - dZ).color(r, g, b, 1.0F).endVertex();
         }
         
         tessellator.draw();
-        GlStateManager.enableCull();
+        GlStateManager.disableBlend();
         GlStateManager.enableTexture2D();
     }
 }
