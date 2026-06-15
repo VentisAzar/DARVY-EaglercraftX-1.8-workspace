@@ -23,6 +23,7 @@ import net.lax1dude.eaglercraft.v1_8.touch_gui.TouchControls;
 import net.lax1dude.eaglercraft.v1_8.touch_gui.TouchOverlayRenderer;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.PvPClient;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;

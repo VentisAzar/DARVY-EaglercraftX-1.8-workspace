@@ -2,6 +2,7 @@ package net.minecraft.client;
 
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
+import net.lax1dude.eaglercraft.v1_8.EagRuntime;
 
 public class PvPClient {
     public static final PvPClient instance = new PvPClient();
