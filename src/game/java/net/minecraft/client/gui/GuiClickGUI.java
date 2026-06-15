@@ -14,9 +14,9 @@ public class GuiClickGUI extends GuiScreen {
         int x = width / 2 - 100;
         int y = height / 6;
         // Read state from GameSettings for display
-        this.buttonList.add(new GuiButton(1, x, y + 40, 200, 20, getButtonText("Fullbright", mc.gameSettings.pvp_fullbright)));
-        this.buttonList.add(new GuiButton(2, x, y + 65, 200, 20, getButtonText("1.7 Animations", mc.gameSettings.pvp_animations17)));
-        this.buttonList.add(new GuiButton(3, x, y + 90, 200, 20, getButtonText("Toggle Sprint", mc.gameSettings.pvp_toggleSprint)));
+        this.buttonList.add(new GuiButton(1, x, y + 40, 200, 20, getButtonText("Fullbright", PvPClient.instance.pvp_fullbright)));
+        this.buttonList.add(new GuiButton(2, x, y + 65, 200, 20, getButtonText("1.7 Animations", PvPClient.instance.pvp_animations17)));
+        this.buttonList.add(new GuiButton(3, x, y + 90, 200, 20, getButtonText("Toggle Sprint", PvPClient.instance.pvp_toggleSprint)));
         this.buttonList.add(new GuiButton(200, x, y + 130, 200, 20, I18n.format("gui.done")));
     }
 
@@ -29,9 +29,9 @@ public class GuiClickGUI extends GuiScreen {
         // Play button press sound
         mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
 
-        if (button.id == 1) PvPClient.instance.setFullbright(!mc.gameSettings.pvp_fullbright); // Use setter to update GameSettings
-        if (button.id == 2) PvPClient.instance.setAnimations17(!mc.gameSettings.pvp_animations17); // Use setter to update GameSettings
-        if (button.id == 3) PvPClient.instance.setToggleSprint(!mc.gameSettings.pvp_toggleSprint); // Use setter to update GameSettings
+        if (button.id == 1) PvPClient.instance.toggleFullbright();
+        if (button.id == 2) PvPClient.instance.toggleAnimations17();
+        if (button.id == 3) PvPClient.instance.toggleSprint();
         if (button.id == 200) {
             mc.displayGuiScreen(null);
             return;
