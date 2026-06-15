@@ -1,6 +1,7 @@
 package net.minecraft.client.gui;
 
 import net.minecraft.client.PvPClient;
+import net.lax1dude.eaglercraft.v1_8.opengl.GlStateManager;
 import net.lax1dude.eaglercraft.v1_8.Keyboard;
 
 public class GuiMusicPrompt extends GuiScreen {
