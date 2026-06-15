@@ -2,6 +2,7 @@ package net.minecraft.client.gui;
 
 import net.minecraft.client.PvPClient;
 import net.lax1dude.eaglercraft.v1_8.opengl.GlStateManager;
+import net.lax1dude.eaglercraft.v1_8.Mouse;
 import java.io.IOException;
 
 public class GuiHudEditor extends GuiScreen {
@@ -31,24 +32,43 @@ public class GuiHudEditor extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F); // Fix: Reset color state to stop black boxes
+        GlStateManager.enableBlend();
         drawCenteredString(fontRendererObj, "HUD Editor - Drag boxes to move elements", width / 2, 20, 0x00FFFF);
-        drawCenteredString(fontRendererObj, "Scroll to change scale (Not implemented yet)", width / 2, 32, 0xAAAAAA);
+        drawCenteredString(fontRendererObj, "Hover + Scroll to change Scale", width / 2, 32, 0xAAAAAA);
 
         // FPS Box
         int fx = PvPClient.instance.fpsX, fy = PvPClient.instance.fpsY;
-        drawRect(fx, fy, fx + 50, fy + 15, 0x7700FFFF);
+        drawRect(fx, fy, fx + (int)(50 * PvPClient.instance.fpsScale), fy + (int)(15 * PvPClient.instance.fpsScale), 0x7700FFFF);
         fontRendererObj.drawString("FPS HUD", fx + 2, fy + 4, 0xFFFFFF);
 
         // Scoreboard Box (Representative)
         int sx = width - 100 + PvPClient.instance.scoreboardX;
         int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
-        drawRect(sx, sy, sx + 90, sy + 100, 0x77FF00FF);
+        drawRect(sx, sy, sx + (int)(90 * PvPClient.instance.scoreboardScale), sy + (int)(100 * PvPClient.instance.scoreboardScale), 0x77FF00FF);
         fontRendererObj.drawString("Scoreboard", sx + 5, sy + 45, 0xFFFFFF);
 
         if (draggingFps) { PvPClient.instance.fpsX = mouseX - 25; PvPClient.instance.fpsY = mouseY - 7; }
         if (draggingScore) { PvPClient.instance.scoreboardX = mouseX - (width - 55); PvPClient.instance.scoreboardY = mouseY - (height / 2); }
 
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int wheel = Mouse.getEventDWheel();
+        if (wheel != 0) {
+            int mx = Mouse.getEventX() * this.width / this.mc.displayWidth;
+            int my = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+            
+            if (mx >= PvPClient.instance.fpsX && mx <= PvPClient.instance.fpsX + 50) {
+                PvPClient.instance.fpsScale = Math.max(0.5F, PvPClient.instance.fpsScale + (wheel > 0 ? 0.1F : -0.1F));
+            }
+            if (mx >= width - 100 + PvPClient.instance.scoreboardX && mx <= width - 10 + PvPClient.instance.scoreboardX) {
+                PvPClient.instance.scoreboardScale = Math.max(0.5F, PvPClient.instance.scoreboardScale + (wheel > 0 ? 0.1F : -0.1F));
+            }
+        }
     }
 
     @Override

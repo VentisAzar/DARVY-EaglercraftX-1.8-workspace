@@ -41,7 +41,8 @@ public class GuiClickGUI extends GuiScreen {
             return;
         }
         if (button.id == 101) {
-            PvPClient.instance.playMusic("https://soundcloud.com/discover"); // Example integration
+            mc.displayGuiScreen(new GuiMusicPrompt(this));
+            return;
         }
         if (button.id == 200) {
             mc.displayGuiScreen(null);
@@ -57,11 +58,11 @@ public class GuiClickGUI extends GuiScreen {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F); // Reset color state
 
         // Background Overlay
-        drawRect(width / 2 - 115, height / 6 - 10, width / 2 + 115, height / 6 + 185, 0xDD0a0a0a);
-        drawHorizontalLine(width / 2 - 110, width / 2 + 110, height / 6 - 10, 0xFF00FFFF);
+        drawRect(width / 2 - 120, height / 6 - 15, width / 2 + 120, height / 6 + 195, 0xEE050505);
+        drawHorizontalLine(width / 2 - 120, width / 2 + 120, height / 6 - 15, 0xFF00FFFF);
 
-        drawCenteredString(fontRendererObj, "\u00a7b\u00a7lDARVY PvP \u00a77v2.0", width / 2, height / 6, 0xFFFFFF);
-        drawCenteredString(fontRendererObj, "\u00a78Optimization Engine Active", width / 2, height / 6 + 12, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "\u00a7b\u00a7lDARVY PvP \u00a7f| \u00a77v2.0", width / 2, height / 6, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "\u00a78Optimization Engine: \u00a7aActive", width / 2, height / 6 + 12, 0xFFFFFF);
         
         super.drawScreen(mouseX, mouseY, partialTicks);
         GlStateManager.enableDepth(); // Re-enable depth for world rendering

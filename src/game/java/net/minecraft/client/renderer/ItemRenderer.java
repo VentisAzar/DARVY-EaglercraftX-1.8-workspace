@@ -11,6 +11,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.PvPClient;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
@@ -336,8 +337,14 @@ public class ItemRenderer {
 					this.transformFirstPersonItem(f, 0.0F);
 					break;
 				case BLOCK:
-					this.transformFirstPersonItem(f, 0.0F);
-					this.func_178103_d();
+					// CRAZY OPTIMIZATION: 1.7 Block-Hitting logic
+					if (PvPClient.instance.pvp_animations17) {
+						this.transformFirstPersonItem(f, f1);
+						this.func_178103_d();
+					} else {
+						this.transformFirstPersonItem(f, 0.0F);
+						this.func_178103_d();
+					}
 					break;
 				case BOW:
 					this.transformFirstPersonItem(f, 0.0F);

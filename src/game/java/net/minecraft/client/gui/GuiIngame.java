@@ -246,11 +246,13 @@ public class GuiIngame extends Gui {
 
 		this.overlayDebug.renderDebugInfo(scaledresolution);
 
-        // Optimized FPS HUD Rendering
+        // CRAZY OPTIMIZATION: Faster FPS extraction without split() churn
         if (PvPClient.instance.pvp_fpsHud) {
-            String fps = mc.debug.split(" ")[0] + " FPS";
+            int spaceIdx = mc.debug.indexOf(' ');
+            String fpsNum = spaceIdx != -1 ? mc.debug.substring(0, spaceIdx) : "0";
+            String fps = fpsNum + " FPS";
             GlStateManager.pushMatrix();
-            GlStateManager.translate(PvPClient.instance.fpsX, PvPClient.instance.fpsY, 0);
+            GlStateManager.translate((float)PvPClient.instance.fpsX, (float)PvPClient.instance.fpsY, 0.0F);
             GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
             mc.fontRendererObj.drawStringWithShadow("\u00a7b" + fps, 0, 0, 0xFFFFFF);
             GlStateManager.popMatrix();
@@ -306,7 +308,7 @@ public class GuiIngame extends Gui {
 				: scoreboard.getObjectiveInDisplaySlot(1);
 		if (scoreobjective1 != null) {
             GlStateManager.pushMatrix();
-            GlStateManager.translate(PvPClient.instance.scoreboardX, PvPClient.instance.scoreboardY, 0);
+            GlStateManager.translate((float)PvPClient.instance.scoreboardX, (float)PvPClient.instance.scoreboardY, 0.0F);
             GlStateManager.scale(PvPClient.instance.scoreboardScale, PvPClient.instance.scoreboardScale, 1.0F);
 			this.renderScoreboard(scoreobjective1, scaledresolution);
             GlStateManager.popMatrix();
