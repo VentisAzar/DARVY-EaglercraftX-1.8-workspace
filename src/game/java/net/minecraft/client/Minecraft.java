@@ -91,6 +91,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.MusicTicker;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.PvPClient;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiControls;
@@ -857,7 +858,9 @@ public class Minecraft implements IThreadListener {
 		}
 
 		synchronized (this.scheduledTasks) {
-			while (!this.scheduledTasks.isEmpty()) {
+			// Optimization: Budgeted task execution to prevent frame spikes
+			long taskBudget = EagRuntime.nanoTime() + 1000000L; // 1ms budget
+			while (!this.scheduledTasks.isEmpty() && EagRuntime.nanoTime() < taskBudget) {
 				Util.func_181617_a((FutureTask) this.scheduledTasks.remove(0), logger);
 			}
 		}
@@ -887,8 +890,6 @@ public class Minecraft implements IThreadListener {
 
 		if (!this.skipRenderWorld) {
 			this.entityRenderer.func_181560_a(this.timer.renderPartialTicks, i);
-			// Render LODs with depth testing enabled so they sit behind actual blocks
-			LODTerrainManager.instance.renderLODs();
 		}
 
 		this.guiAchievement.updateAchievementWindow();
@@ -1224,15 +1225,12 @@ public class Minecraft implements IThreadListener {
 
 		VoiceClientController.tickVoiceClient();
 
-		if (this.thePlayer != null && this.joinWorldTickCounter % 100 == 0) {
-			// Periodic cache cleanup
-			LODTerrainManager.instance.cleanup(this.thePlayer.posX, this.thePlayer.posZ);
-		}
-
 		this.entityRenderer.getMouseOver(1.0F);
 		if (!this.isGamePaused && this.theWorld != null) {
 			this.playerController.updateController();
 		}
+
+		PvPClient.instance.onTick();
 
 		if (this.thePlayer != null && this.thePlayer.sendQueue != null) {
 			this.thePlayer.sendQueue.getEaglerMessageController().flush();
@@ -1414,6 +1412,10 @@ public class Minecraft implements IThreadListener {
 
 			while (Keyboard.next()) {
 				int k = Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey();
+				if (k == 54 && Keyboard.getEventKeyState() && this.currentScreen == null) {
+					this.displayGuiScreen(new net.minecraft.client.gui.GuiClickGUI());
+				}
+
 				if (k == 0x1D && (Keyboard.areKeysLocked() || isFullScreen())) {
 					KeyBinding.setKeyBindState(gameSettings.keyBindSprint.getKeyCode(), Keyboard.getEventKeyState());
 				}
