@@ -58,11 +58,11 @@ public class GuiClickGUI extends GuiScreen {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F); // Reset color state
 
         // Background Overlay
-        drawRect(width / 2 - 120, height / 6 - 15, width / 2 + 120, height / 6 + 195, 0xEE050505);
+        drawRect(width / 2 - 120, height / 6 - 15, width / 2 + 120, height / 6 + 185, 0xEE050505);
         drawHorizontalLine(width / 2 - 120, width / 2 + 120, height / 6 - 15, 0xFF00FFFF);
 
-        drawCenteredString(fontRendererObj, "\u00a7b\u00a7lDARVY PvP \u00a7f| \u00a77v2.0", width / 2, height / 6, 0xFFFFFF);
-        drawCenteredString(fontRendererObj, "\u00a78Optimization Engine: \u00a7aActive", width / 2, height / 6 + 12, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "\u00a7b\u00a7lDARVY PvP \u00a7f| \u00a77v2.1", width / 2, height / 6, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "\u00a78Engine: \u00a7aUltra-Optimized", width / 2, height / 6 + 12, 0xFFFFFF);
         
         super.drawScreen(mouseX, mouseY, partialTicks);
         GlStateManager.enableDepth(); // Re-enable depth for world rendering

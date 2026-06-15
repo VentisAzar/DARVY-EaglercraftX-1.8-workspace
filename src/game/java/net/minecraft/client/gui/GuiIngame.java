@@ -246,15 +246,12 @@ public class GuiIngame extends Gui {
 
 		this.overlayDebug.renderDebugInfo(scaledresolution);
 
-        // CRAZY OPTIMIZATION: Faster FPS extraction without split() churn
+        // CRAZY OPTIMIZATION: Direct integer access to FPS counter
         if (PvPClient.instance.pvp_fpsHud) {
-            int spaceIdx = mc.debug.indexOf(' ');
-            String fpsNum = spaceIdx != -1 ? mc.debug.substring(0, spaceIdx) : "0";
-            String fps = fpsNum + " FPS";
             GlStateManager.pushMatrix();
             GlStateManager.translate((float)PvPClient.instance.fpsX, (float)PvPClient.instance.fpsY, 0.0F);
             GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
-            mc.fontRendererObj.drawStringWithShadow("\u00a7b" + fps, 0, 0, 0xFFFFFF);
+            mc.fontRendererObj.drawStringWithShadow("\u00a7b" + Minecraft.getDebugFPS() + " FPS", 0, 0, 0xFFFFFF);
             GlStateManager.popMatrix();
         }
 

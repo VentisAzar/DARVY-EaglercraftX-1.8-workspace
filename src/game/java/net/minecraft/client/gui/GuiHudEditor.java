@@ -61,11 +61,17 @@ public class GuiHudEditor extends GuiScreen {
         if (wheel != 0) {
             int mx = Mouse.getEventX() * this.width / this.mc.displayWidth;
             int my = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-            
-            if (mx >= PvPClient.instance.fpsX && mx <= PvPClient.instance.fpsX + 50) {
+
+            // Account for scale in hover detection
+            int fw = (int)(50 * PvPClient.instance.fpsScale);
+            if (mx >= PvPClient.instance.fpsX && mx <= PvPClient.instance.fpsX + fw) {
                 PvPClient.instance.fpsScale = Math.max(0.5F, PvPClient.instance.fpsScale + (wheel > 0 ? 0.1F : -0.1F));
             }
-            if (mx >= width - 100 + PvPClient.instance.scoreboardX && mx <= width - 10 + PvPClient.instance.scoreboardX) {
+            int sx = width - 100 + PvPClient.instance.scoreboardX;
+            int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
+            int sw = (int)(90 * PvPClient.instance.scoreboardScale);
+            int sh = (int)(100 * PvPClient.instance.scoreboardScale);
+            if (mx >= sx && mx <= sx + sw && my >= sy && my <= sy + sh) {
                 PvPClient.instance.scoreboardScale = Math.max(0.5F, PvPClient.instance.scoreboardScale + (wheel > 0 ? 0.1F : -0.1F));
             }
         }
@@ -73,10 +79,15 @@ public class GuiHudEditor extends GuiScreen {
 
     @Override
     protected void mouseClicked(int mx, int my, int btn) {
-        if (mx >= PvPClient.instance.fpsX && mx <= PvPClient.instance.fpsX + 50 && my >= PvPClient.instance.fpsY && my <= PvPClient.instance.fpsY + 15) draggingFps = true;
+        int fw = (int)(50 * PvPClient.instance.fpsScale);
+        int fh = (int)(15 * PvPClient.instance.fpsScale);
+        if (mx >= PvPClient.instance.fpsX && mx <= PvPClient.instance.fpsX + fw && my >= PvPClient.instance.fpsY && my <= PvPClient.instance.fpsY + fh) draggingFps = true;
+
         int sx = width - 100 + PvPClient.instance.scoreboardX;
         int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
-        if (mx >= sx && mx <= sx + 90 && my >= sy && my <= sy + 100) draggingScore = true;
+        int sw = (int)(90 * PvPClient.instance.scoreboardScale);
+        int sh = (int)(100 * PvPClient.instance.scoreboardScale);
+        if (mx >= sx && mx <= sx + sw && my >= sy && my <= sy + sh) draggingScore = true;
         super.mouseClicked(mx, my, btn);
     }
 
