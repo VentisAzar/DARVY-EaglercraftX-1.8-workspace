@@ -9,6 +9,17 @@ public class PvPClient {
     public boolean pvp_fullbright = false;
     public boolean pvp_animations17 = true;
     public boolean pvp_toggleSprint = false;
+    public boolean pvp_fpsHud = true;
+
+    // HUD Positions & Scaling
+    public int fpsX = 5, fpsY = 5;
+    public float fpsScale = 1.0F;
+    public int scoreboardX = 0, scoreboardY = 0; // Relative to default
+    public float scoreboardScale = 1.0F;
+
+    // Music System
+    public String currentTrack = "None";
+    private boolean isMusicPlaying = false;
 
     public void onTick() {
         Minecraft mc = Minecraft.getMinecraft();
@@ -25,6 +36,11 @@ public class PvPClient {
         if (this.pvp_toggleSprint) {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
         }
+    }
+
+    public void playMusic(String url) {
+        this.currentTrack = url;
+        EagRuntime.openLink(url); // Redirects to the music source for browser playback
     }
 
     /**

@@ -245,6 +245,16 @@ public class GuiIngame extends Gui {
 
 		this.overlayDebug.renderDebugInfo(scaledresolution);
 
+        // Optimized FPS HUD Rendering
+        if (PvPClient.instance.pvp_fpsHud) {
+            String fps = mc.debug.split(" ")[0] + " FPS";
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(PvPClient.instance.fpsX, PvPClient.instance.fpsY, 0);
+            GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
+            mc.fontRendererObj.drawStringWithShadow("\u00a7b" + fps, 0, 0, 0xFFFFFF);
+            GlStateManager.popMatrix();
+        }
+
 		if (this.field_175195_w > 0) {
 			float f3 = (float) this.field_175195_w - partialTicks;
 			int i2 = 255;
@@ -294,7 +304,11 @@ public class GuiIngame extends Gui {
 		ScoreObjective scoreobjective1 = scoreobjective != null ? scoreobjective
 				: scoreboard.getObjectiveInDisplaySlot(1);
 		if (scoreobjective1 != null) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(PvPClient.instance.scoreboardX, PvPClient.instance.scoreboardY, 0);
+            GlStateManager.scale(PvPClient.instance.scoreboardScale, PvPClient.instance.scoreboardScale, 1.0F);
 			this.renderScoreboard(scoreobjective1, scaledresolution);
+            GlStateManager.popMatrix();
 		}
 
 		if (this.mc.currentScreen == null) {

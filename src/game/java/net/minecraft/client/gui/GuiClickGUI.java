@@ -14,10 +14,13 @@ public class GuiClickGUI extends GuiScreen {
         int x = width / 2 - 100;
         int y = height / 6;
         // Read state from GameSettings for display
-        this.buttonList.add(new GuiButton(1, x, y + 40, 200, 20, getButtonText("Fullbright", PvPClient.instance.pvp_fullbright)));
-        this.buttonList.add(new GuiButton(2, x, y + 65, 200, 20, getButtonText("1.7 Animations", PvPClient.instance.pvp_animations17)));
-        this.buttonList.add(new GuiButton(3, x, y + 90, 200, 20, getButtonText("Toggle Sprint", PvPClient.instance.pvp_toggleSprint)));
-        this.buttonList.add(new GuiButton(200, x, y + 130, 200, 20, I18n.format("gui.done")));
+        this.buttonList.add(new GuiButton(1, x, y + 25, 200, 20, getButtonText("Fullbright", PvPClient.instance.pvp_fullbright)));
+        this.buttonList.add(new GuiButton(2, x, y + 50, 200, 20, getButtonText("1.7 Animations", PvPClient.instance.pvp_animations17)));
+        this.buttonList.add(new GuiButton(3, x, y + 75, 200, 20, getButtonText("Toggle Sprint", PvPClient.instance.pvp_toggleSprint)));
+        this.buttonList.add(new GuiButton(4, x, y + 100, 200, 20, getButtonText("FPS HUD", PvPClient.instance.pvp_fpsHud)));
+        this.buttonList.add(new GuiButton(100, x, y + 130, 98, 20, "\u00a7bEdit HUD"));
+        this.buttonList.add(new GuiButton(101, x + 102, y + 130, 98, 20, "\u00a7dMusic"));
+        this.buttonList.add(new GuiButton(200, x, y + 155, 200, 20, I18n.format("gui.done")));
     }
 
     private String getButtonText(String name, boolean state) {
@@ -32,6 +35,14 @@ public class GuiClickGUI extends GuiScreen {
         if (button.id == 1) PvPClient.instance.toggleFullbright();
         if (button.id == 2) PvPClient.instance.toggleAnimations17();
         if (button.id == 3) PvPClient.instance.toggleSprint();
+        if (button.id == 4) PvPClient.instance.pvp_fpsHud = !PvPClient.instance.pvp_fpsHud;
+        if (button.id == 100) {
+            mc.displayGuiScreen(new GuiHudEditor(this));
+            return;
+        }
+        if (button.id == 101) {
+            PvPClient.instance.playMusic("https://soundcloud.com/discover"); // Example integration
+        }
         if (button.id == 200) {
             mc.displayGuiScreen(null);
             return;
@@ -46,11 +57,11 @@ public class GuiClickGUI extends GuiScreen {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F); // Reset color state
 
         // Background Overlay
-        drawRect(width / 2 - 110, height / 6 - 10, width / 2 + 110, height / 6 + 160, 0xCC000000);
+        drawRect(width / 2 - 115, height / 6 - 10, width / 2 + 115, height / 6 + 185, 0xDD0a0a0a);
         drawHorizontalLine(width / 2 - 110, width / 2 + 110, height / 6 - 10, 0xFF00FFFF);
-        
-        drawCenteredString(fontRendererObj, "\u00a7b\u00a7lEAGLER PvP", width / 2, height / 6, 0xFFFFFF);
-        drawCenteredString(fontRendererObj, "\u00a77Modules", width / 2, height / 6 + 12, 0xFFFFFF);
+
+        drawCenteredString(fontRendererObj, "\u00a7b\u00a7lDARVY PvP \u00a77v2.0", width / 2, height / 6, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "\u00a78Optimization Engine Active", width / 2, height / 6 + 12, 0xFFFFFF);
         
         super.drawScreen(mouseX, mouseY, partialTicks);
         GlStateManager.enableDepth(); // Re-enable depth for world rendering
