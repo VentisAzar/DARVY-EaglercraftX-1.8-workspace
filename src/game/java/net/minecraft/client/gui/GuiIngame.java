@@ -255,6 +255,8 @@ public class GuiIngame extends Gui {
             GlStateManager.popMatrix();
         }
 
+        this.renderPvPHUD(scaledresolution);
+
 		if (this.field_175195_w > 0) {
 			float f3 = (float) this.field_175195_w - partialTicks;
 			int i2 = 255;
@@ -1303,6 +1305,121 @@ public class GuiIngame extends Gui {
 				&& ty < hotbarAreaY + hotbarAreaH)
 				|| (tx >= interactButtonX && ty >= interactButtonY && tx < interactButtonX + interactButtonW
 						&& ty < interactButtonY + interactButtonH);
+	}
+
+	private void renderPvPHUD(ScaledResolution scaledresolution) {
+		if (this.mc.gameSettings.showDebugInfo) return;
+
+		// 1. CPS HUD
+		if (PvPClient.instance.pvp_cpsHud) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.fpsX, (float)(PvPClient.instance.fpsY + 14), 0.0F);
+			GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
+			String cpsStr = "\u00a7bCPS: \u00a7f" + PvPClient.instance.getLeftCPS() + " \u00a77| \u00a7f" + PvPClient.instance.getRightCPS();
+			drawRect(-2, -2, mc.fontRendererObj.getStringWidth(cpsStr) + 4, 11, 0x70000000);
+			mc.fontRendererObj.drawStringWithShadow(cpsStr, 0, 0, 0xFFFFFF);
+			GlStateManager.popMatrix();
+		}
+
+		// 2. Keystrokes HUD
+		if (PvPClient.instance.pvp_keystrokesHud) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.keystrokesX, (float)PvPClient.instance.keystrokesY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.keystrokesScale, PvPClient.instance.keystrokesScale, 1.0F);
+
+			boolean w = mc.gameSettings.keyBindForward.isKeyDown();
+			boolean a = mc.gameSettings.keyBindLeft.isKeyDown();
+			boolean s = mc.gameSettings.keyBindBack.isKeyDown();
+			boolean d = mc.gameSettings.keyBindRight.isKeyDown();
+			boolean space = mc.gameSettings.keyBindJump.isKeyDown();
+			boolean lmb = mc.gameSettings.keyBindAttack.isKeyDown();
+			boolean rmb = mc.gameSettings.keyBindUseItem.isKeyDown();
+
+			// W key
+			drawRect(18, 0, 34, 16, w ? 0x9000E5FF : 0x70000000);
+			drawCenteredString(mc.fontRendererObj, "W", 26, 4, w ? 0x000000 : 0xFFFFFF);
+
+			// A, S, D keys
+			drawRect(0, 18, 16, 34, a ? 0x9000E5FF : 0x70000000);
+			drawCenteredString(mc.fontRendererObj, "A", 8, 22, a ? 0x000000 : 0xFFFFFF);
+
+			drawRect(18, 18, 34, 34, s ? 0x9000E5FF : 0x70000000);
+			drawCenteredString(mc.fontRendererObj, "S", 26, 22, s ? 0x000000 : 0xFFFFFF);
+
+			drawRect(36, 18, 52, 34, d ? 0x9000E5FF : 0x70000000);
+			drawCenteredString(mc.fontRendererObj, "D", 44, 22, d ? 0x000000 : 0xFFFFFF);
+
+			// LMB / RMB
+			drawRect(0, 36, 25, 52, lmb ? 0x9000E5FF : 0x70000000);
+			drawCenteredString(mc.fontRendererObj, "LMB", 12, 40, lmb ? 0x000000 : 0xFFFFFF);
+
+			drawRect(27, 36, 52, 52, rmb ? 0x9000E5FF : 0x70000000);
+			drawCenteredString(mc.fontRendererObj, "RMB", 39, 40, rmb ? 0x000000 : 0xFFFFFF);
+
+			// Spacebar
+			drawRect(0, 54, 52, 64, space ? 0x9000E5FF : 0x70000000);
+			drawRect(16, 58, 36, 60, space ? 0x000000 : 0xFFFFFF);
+
+			GlStateManager.popMatrix();
+		}
+
+		// 3. Armor Status HUD
+		if (PvPClient.instance.pvp_armorStatus && mc.thePlayer != null) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.armorX, (float)PvPClient.instance.armorY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.armorScale, PvPClient.instance.armorScale, 1.0F);
+
+			RenderHelper.enableGUIStandardItemLighting();
+			int yOffset = 0;
+			for (int slot = 3; slot >= 0; slot--) {
+				ItemStack armor = mc.thePlayer.inventory.armorItemInSlot(slot);
+				if (armor != null) {
+					mc.getRenderItem().renderItemAndEffectIntoGUI(armor, 0, yOffset);
+					int maxDurability = armor.getMaxDamage();
+					if (maxDurability > 0) {
+						int dur = maxDurability - armor.getItemDamage();
+						int pct = (dur * 100) / maxDurability;
+						String durStr = (pct < 20 ? "\u00a7c" : (pct < 50 ? "\u00a7e" : "\u00a7a")) + pct + "%";
+						mc.fontRendererObj.drawStringWithShadow(durStr, 20, yOffset + 4, 0xFFFFFF);
+					}
+					yOffset += 18;
+				}
+			}
+			RenderHelper.disableStandardItemLighting();
+			GlStateManager.popMatrix();
+		}
+
+		// 4. Combo Counter Display
+		if (PvPClient.instance.pvp_comboDisplay && PvPClient.instance.currentCombo > 0) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.comboX, (float)PvPClient.instance.comboY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.comboScale, PvPClient.instance.comboScale, 1.0F);
+			String comboText = "\u00a7d\u00a7l" + PvPClient.instance.currentCombo + " \u00a7fHITS";
+			drawRect(-2, -2, mc.fontRendererObj.getStringWidth(comboText) + 4, 11, 0x70000000);
+			mc.fontRendererObj.drawStringWithShadow(comboText, 0, 0, 0xFFFFFF);
+			GlStateManager.popMatrix();
+		}
+
+		// 5. Compass HUD
+		if (PvPClient.instance.pvp_compassHud && mc.thePlayer != null) {
+			GlStateManager.pushMatrix();
+			int centerX = scaledresolution.getScaledWidth() / 2 + PvPClient.instance.compassX;
+			int topY = PvPClient.instance.compassY;
+			GlStateManager.translate((float)centerX, (float)topY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.compassScale, PvPClient.instance.compassScale, 1.0F);
+
+			int yaw = (MathHelper.floor_double((double)(mc.thePlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3);
+			String dir = "N";
+			if (yaw == 0) dir = "S";
+			else if (yaw == 1) dir = "W";
+			else if (yaw == 2) dir = "N";
+			else if (yaw == 3) dir = "E";
+
+			String compassText = "\u00a7b[ \u00a7f" + dir + " \u00a7b]";
+			drawRect(-mc.fontRendererObj.getStringWidth(compassText) / 2 - 4, -2, mc.fontRendererObj.getStringWidth(compassText) / 2 + 4, 11, 0x70000000);
+			drawCenteredString(mc.fontRendererObj, compassText, 0, 0, 0xFFFFFF);
+			GlStateManager.popMatrix();
+		}
 	}
 
 }

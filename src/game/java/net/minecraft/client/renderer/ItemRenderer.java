@@ -482,6 +482,9 @@ public class ItemRenderer {
 
 		for (int i = 0; i < 2; ++i) {
 			GlStateManager.pushMatrix();
+			if (PvPClient.instance.pvp_lowFire) {
+				GlStateManager.translate(0.0F, -0.28F, 0.0F);
+			}
 			EaglerTextureAtlasSprite textureatlassprite = this.mc.getTextureMapBlocks()
 					.getAtlasSprite("minecraft:blocks/fire_layer_1");
 			this.mc.getTextureManager().bindTexture(TextureMap.locationBlocksTexture);

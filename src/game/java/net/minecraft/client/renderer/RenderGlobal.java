@@ -606,6 +606,7 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 			this.mc.entityRenderer.enableLightmap();
 			List list = this.theWorld.getLoadedEntityList();
 			this.countEntitiesTotal = list.size();
+			SodiumOptimizer.instance.resetFrameCounters();
 
 			if (!DeferredStateManager.isDeferredRenderer()) {
 				for (int i = 0; i < this.theWorld.weatherEffects.size(); ++i) {
@@ -642,6 +643,17 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 							entity2 = (Entity) iterator.next();
 							flag2 = this.renderManager.shouldRender(entity2, camera, d0, d1, d2)
 									|| entity2.riddenByEntity == this.mc.thePlayer;
+							if (SodiumOptimizer.instance.entityFrustumCulling && flag2) {
+								if (!entity2.ignoreFrustumCheck && entity2 != this.mc.thePlayer && entity2.riddenByEntity != this.mc.thePlayer) {
+									if (!camera.isBoundingBoxInFrustum(entity2.getEntityBoundingBox())) {
+										SodiumOptimizer.instance.culledEntitiesThisFrame++;
+										flag2 = false;
+									}
+								}
+							}
+							if (flag2) {
+								SodiumOptimizer.instance.renderedEntitiesThisFrame++;
+							}
 							if (light) {
 								entity2.renderDynamicLightsEagler(partialTicks, flag2);
 							}
@@ -1493,9 +1505,12 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 	public void updateChunks(long finishTimeNano) {
 		this.displayListEntitiesDirty |= this.renderDispatcher.updateChunks(finishTimeNano);
 		if (!this.chunksToUpdate.isEmpty()) {
+			SodiumOptimizer.instance.pendingChunkRebuilds = this.chunksToUpdate.size();
 			Iterator iterator = this.chunksToUpdate.iterator();
+			int processedThisFrame = 0;
+			int maxBudget = SodiumOptimizer.instance.sodiumChunkRebuilding ? SodiumOptimizer.instance.rebuildBudget : 999;
 
-			while (iterator.hasNext()) {
+			while (iterator.hasNext() && processedThisFrame < maxBudget) {
 				RenderChunk renderchunk = (RenderChunk) iterator.next();
 				if (!this.renderDispatcher.updateChunkLater(renderchunk)) {
 					break;
@@ -1503,11 +1518,14 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 
 				renderchunk.setNeedsUpdate(false);
 				iterator.remove();
+				processedThisFrame++;
 				long i = finishTimeNano - EagRuntime.nanoTime();
 				if (i < 0L) {
 					break;
 				}
 			}
+		} else {
+			SodiumOptimizer.instance.pendingChunkRebuilds = 0;
 		}
 	}
 

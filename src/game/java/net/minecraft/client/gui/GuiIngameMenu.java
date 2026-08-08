@@ -108,6 +108,7 @@ public class GuiIngameMenu extends GuiScreen {
 				I18n.format("gui.stats", new Object[0]), PauseMenuCustomizeState.icon_statistics_L,
 				PauseMenuCustomizeState.icon_statistics_L_aspect, PauseMenuCustomizeState.icon_statistics_R,
 				PauseMenuCustomizeState.icon_statistics_R_aspect));
+		this.buttonList.add(new GuiButton(99, this.width / 2 - 100, this.height / 4 + 72 + b0, 200, 20, "\u00a7b\u00a7lDARVY Mod Menu \u00a77(Right Shift)"));
 		lanButton.enabled = SingleplayerServerController.isWorldRunning();
 		if (PauseMenuCustomizeState.discordButtonMode != PauseMenuCustomizeState.DISCORD_MODE_NONE) {
 			lanButton.enabled = true;
@@ -158,6 +159,9 @@ public class GuiIngameMenu extends GuiScreen {
 			break;
 		case 6:
 			this.mc.displayGuiScreen(new GuiStats(this, this.mc.thePlayer.getStatFileWriter()));
+			break;
+		case 99:
+			this.mc.displayGuiScreen(new GuiClickGUI());
 			break;
 		case 7:
 			if (!LANServerController.supported()) {
