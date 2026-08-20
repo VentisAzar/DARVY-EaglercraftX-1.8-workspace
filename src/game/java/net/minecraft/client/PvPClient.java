@@ -25,10 +25,10 @@ public class PvPClient {
     public boolean pvp_cpsHud = true;
     public boolean pvp_keystrokesHud = true;
     public boolean pvp_armorStatus = true;
-    public boolean pvp_comboDisplay = true;
-    public boolean pvp_compassHud = true;
+    public boolean pvp_potionHud = true;
     public boolean pvp_customCrosshair = false;
     public boolean pvp_blockOutline = true;
+    public boolean pvp_customFont = false;
 
     // HUD Positions & Scaling
     public int fpsX = 5, fpsY = 5;
@@ -40,11 +40,8 @@ public class PvPClient {
     public int armorX = 5, armorY = 130;
     public float armorScale = 1.0F;
     
-    public int comboX = 5, comboY = 200;
-    public float comboScale = 1.0F;
-
-    public int compassX = 0, compassY = 15; // Centered by default
-    public float compassScale = 1.0F;
+    public int potionX = 5, potionY = 195;
+    public float potionScale = 1.0F;
 
     public int scoreboardX = 0, scoreboardY = 0;
     public float scoreboardScale = 1.0F;
@@ -52,10 +49,6 @@ public class PvPClient {
     // CPS Tracker State
     private final List<Long> leftClicks = new ArrayList<>();
     private final List<Long> rightClicks = new ArrayList<>();
-
-    // Combo Counter State
-    public int currentCombo = 0;
-    public long lastHitTime = 0L;
 
     // Music System
     public String currentTrack = "None";
@@ -74,11 +67,6 @@ public class PvPClient {
         // Toggle Sprint Logic
         if (this.pvp_toggleSprint) {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
-        }
-
-        // Reset Combo if no hit for > 2.5 seconds
-        if (System.currentTimeMillis() - lastHitTime > 2500L) {
-            currentCombo = 0;
         }
     }
 
@@ -102,11 +90,6 @@ public class PvPClient {
         return this.rightClicks.size();
     }
 
-    public void registerHit() {
-        this.currentCombo++;
-        this.lastHitTime = System.currentTimeMillis();
-    }
-
     public void playMusic(String url) {
         this.currentTrack = url;
         EagRuntime.openLink(url);
@@ -117,4 +100,5 @@ public class PvPClient {
     public void toggleSprint() { this.pvp_toggleSprint = !this.pvp_toggleSprint; }
     public void toggleNoHurtCam() { this.pvp_noHurtCam = !this.pvp_noHurtCam; }
     public void toggleLowFire() { this.pvp_lowFire = !this.pvp_lowFire; }
+    public void toggleCustomFont() { this.pvp_customFont = !this.pvp_customFont; }
 }

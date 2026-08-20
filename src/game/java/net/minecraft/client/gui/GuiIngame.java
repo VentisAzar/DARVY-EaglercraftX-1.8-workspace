@@ -44,6 +44,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
@@ -1389,36 +1390,34 @@ public class GuiIngame extends Gui {
 			GlStateManager.popMatrix();
 		}
 
-		// 4. Combo Counter Display
-		if (PvPClient.instance.pvp_comboDisplay && PvPClient.instance.currentCombo > 0) {
-			GlStateManager.pushMatrix();
-			GlStateManager.translate((float)PvPClient.instance.comboX, (float)PvPClient.instance.comboY, 0.0F);
-			GlStateManager.scale(PvPClient.instance.comboScale, PvPClient.instance.comboScale, 1.0F);
-			String comboText = "\u00a7d\u00a7l" + PvPClient.instance.currentCombo + " \u00a7fHITS";
-			drawRect(-2, -2, mc.fontRendererObj.getStringWidth(comboText) + 4, 11, 0x70000000);
-			mc.fontRendererObj.drawStringWithShadow(comboText, 0, 0, 0xFFFFFF);
-			GlStateManager.popMatrix();
-		}
+		// 4. Potion HUD
+		if (PvPClient.instance.pvp_potionHud && mc.thePlayer != null) {
+			java.util.List<PotionEffect> effects = mc.thePlayer.getActivePotionEffectsList();
+			if (!effects.isEmpty()) {
+				GlStateManager.pushMatrix();
+				GlStateManager.translate((float)PvPClient.instance.potionX, (float)PvPClient.instance.potionY, 0.0F);
+				GlStateManager.scale(PvPClient.instance.potionScale, PvPClient.instance.potionScale, 1.0F);
 
-		// 5. Compass HUD
-		if (PvPClient.instance.pvp_compassHud && mc.thePlayer != null) {
-			GlStateManager.pushMatrix();
-			int centerX = scaledresolution.getScaledWidth() / 2 + PvPClient.instance.compassX;
-			int topY = PvPClient.instance.compassY;
-			GlStateManager.translate((float)centerX, (float)topY, 0.0F);
-			GlStateManager.scale(PvPClient.instance.compassScale, PvPClient.instance.compassScale, 1.0F);
+				int yOff = 0;
+				for (PotionEffect effect : effects) {
+					Potion potion = Potion.potionTypes[effect.getPotionID()];
+					if (potion == null) continue;
 
-			int yaw = (MathHelper.floor_double((double)(mc.thePlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3);
-			String dir = "N";
-			if (yaw == 0) dir = "S";
-			else if (yaw == 1) dir = "W";
-			else if (yaw == 2) dir = "N";
-			else if (yaw == 3) dir = "E";
+					String name = I18n.format(potion.getName());
+					if (effect.getAmplifier() == 1) name += " II";
+					else if (effect.getAmplifier() == 2) name += " III";
+					else if (effect.getAmplifier() == 3) name += " IV";
+					else if (effect.getAmplifier() > 3) name += " " + (effect.getAmplifier() + 1);
 
-			String compassText = "\u00a7b[ \u00a7f" + dir + " \u00a7b]";
-			drawRect(-mc.fontRendererObj.getStringWidth(compassText) / 2 - 4, -2, mc.fontRendererObj.getStringWidth(compassText) / 2 + 4, 11, 0x70000000);
-			drawCenteredString(mc.fontRendererObj, compassText, 0, 0, 0xFFFFFF);
-			GlStateManager.popMatrix();
+					String duration = Potion.getDurationString(effect);
+					String text = (potion.isBadEffect() ? "\u00a7c" : "\u00a7b") + name + " \u00a77" + duration;
+
+					drawRect(-2, yOff - 2, mc.fontRendererObj.getStringWidth(text) + 4, yOff + 11, 0x70000000);
+					mc.fontRendererObj.drawStringWithShadow(text, 0, yOff, 0xFFFFFF);
+					yOff += 14;
+				}
+				GlStateManager.popMatrix();
+			}
 		}
 	}
 

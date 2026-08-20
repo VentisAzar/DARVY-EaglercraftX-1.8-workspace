@@ -7,8 +7,15 @@ import java.io.IOException;
 
 public class GuiHudEditor extends GuiScreen {
     private final GuiScreen parent;
+    
     private boolean draggingFps = false;
-    private boolean draggingScore = false;
+    private boolean draggingKeystrokes = false;
+    private boolean draggingArmor = false;
+    private boolean draggingPotion = false;
+    private boolean draggingScoreboard = false;
+
+    private int dragOffsetX = 0;
+    private int dragOffsetY = 0;
 
     public GuiHudEditor(GuiScreen parent) {
         this.parent = parent;
@@ -16,42 +23,107 @@ public class GuiHudEditor extends GuiScreen {
 
     @Override
     public void initGui() {
-        this.buttonList.add(new GuiButton(200, width / 2 - 100, height / 2 + 50, "Save & Exit"));
-        this.buttonList.add(new GuiButton(1, width / 2 - 100, height / 2 + 75, "Reset Positions"));
+        this.buttonList.add(new GuiButton(200, width / 2 - 100, height / 2 + 70, 200, 20, "Save & Exit"));
+        this.buttonList.add(new GuiButton(1, width / 2 - 100, height / 2 + 95, 200, 20, "Reset Positions"));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if (button.id == 200) mc.displayGuiScreen(parent);
-        if (button.id == 1) {
-            PvPClient.instance.fpsX = 5; PvPClient.instance.fpsY = 5;
-            PvPClient.instance.scoreboardX = 0; PvPClient.instance.scoreboardY = 0;
+        if (button.id == 200) {
+            mc.displayGuiScreen(parent);
+        } else if (button.id == 1) {
+            PvPClient.instance.fpsX = 5; PvPClient.instance.fpsY = 5; PvPClient.instance.fpsScale = 1.0F;
+            PvPClient.instance.keystrokesX = 5; PvPClient.instance.keystrokesY = 40; PvPClient.instance.keystrokesScale = 1.0F;
+            PvPClient.instance.armorX = 5; PvPClient.instance.armorY = 130; PvPClient.instance.armorScale = 1.0F;
+            PvPClient.instance.potionX = 5; PvPClient.instance.potionY = 195; PvPClient.instance.potionScale = 1.0F;
+            PvPClient.instance.scoreboardX = 0; PvPClient.instance.scoreboardY = 0; PvPClient.instance.scoreboardScale = 1.0F;
         }
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F); // Fix: Reset color state to stop black boxes
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableBlend();
-        drawCenteredString(fontRendererObj, "HUD Editor - Drag boxes to move elements", width / 2, 20, 0x00FFFF);
-        drawCenteredString(fontRendererObj, "Hover + Scroll to change Scale", width / 2, 32, 0xAAAAAA);
 
-        // FPS Box
-        int fx = PvPClient.instance.fpsX, fy = PvPClient.instance.fpsY;
-        drawRect(fx, fy, fx + (int)(50 * PvPClient.instance.fpsScale), fy + (int)(15 * PvPClient.instance.fpsScale), 0x7700FFFF);
-        fontRendererObj.drawString("FPS HUD", fx + 2, fy + 4, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "\u00a7b\u00a7lDARVY HUD Editor", width / 2, 12, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "\u00a77Click & drag any box to reposition \u00a78| \u00a77Scroll over a box to scale", width / 2, 26, 0xFFFFFF);
 
-        // Scoreboard Box (Representative)
+        // 1. FPS & CPS Box
+        if (PvPClient.instance.pvp_fpsHud || PvPClient.instance.pvp_cpsHud) {
+            int fx = PvPClient.instance.fpsX, fy = PvPClient.instance.fpsY;
+            int fw = (int)(65 * PvPClient.instance.fpsScale);
+            int fh = (int)(26 * PvPClient.instance.fpsScale);
+            drawRect(fx, fy, fx + fw, fy + fh, draggingFps ? 0x9900E5FF : 0x6600E5FF);
+            drawOutline(fx, fy, fx + fw, fy + fh, 0xFF00E5FF);
+            fontRendererObj.drawStringWithShadow("FPS / CPS", fx + 4, fy + 4, 0xFFFFFF);
+        }
+
+        // 2. Keystrokes Box
+        if (PvPClient.instance.pvp_keystrokesHud) {
+            int kx = PvPClient.instance.keystrokesX, ky = PvPClient.instance.keystrokesY;
+            int kw = (int)(54 * PvPClient.instance.keystrokesScale);
+            int kh = (int)(66 * PvPClient.instance.keystrokesScale);
+            drawRect(kx, ky, kx + kw, ky + kh, draggingKeystrokes ? 0x999D4EDD : 0x669D4EDD);
+            drawOutline(kx, ky, kx + kw, ky + kh, 0xFF9D4EDD);
+            fontRendererObj.drawStringWithShadow("Keystrokes", kx + 4, ky + 4, 0xFFFFFF);
+        }
+
+        // 3. Armor HUD Box
+        if (PvPClient.instance.pvp_armorStatus) {
+            int ax = PvPClient.instance.armorX, ay = PvPClient.instance.armorY;
+            int aw = (int)(55 * PvPClient.instance.armorScale);
+            int ah = (int)(72 * PvPClient.instance.armorScale);
+            drawRect(ax, ay, ax + aw, ay + ah, draggingArmor ? 0x993B82F6 : 0x663B82F6);
+            drawOutline(ax, ay, ax + aw, ay + ah, 0xFF3B82F6);
+            fontRendererObj.drawStringWithShadow("Armor HUD", ax + 4, ay + 4, 0xFFFFFF);
+        }
+
+        // 4. Potion HUD Box
+        if (PvPClient.instance.pvp_potionHud) {
+            int px = PvPClient.instance.potionX, py = PvPClient.instance.potionY;
+            int pw = (int)(85 * PvPClient.instance.potionScale);
+            int ph = (int)(45 * PvPClient.instance.potionScale);
+            drawRect(px, py, px + pw, py + ph, draggingPotion ? 0x9910B981 : 0x6610B981);
+            drawOutline(px, py, px + pw, py + ph, 0xFF10B981);
+            fontRendererObj.drawStringWithShadow("Potion HUD", px + 4, py + 4, 0xFFFFFF);
+        }
+
+        // 5. Scoreboard Box
         int sx = width - 100 + PvPClient.instance.scoreboardX;
         int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
-        drawRect(sx, sy, sx + (int)(90 * PvPClient.instance.scoreboardScale), sy + (int)(100 * PvPClient.instance.scoreboardScale), 0x77FF00FF);
-        fontRendererObj.drawString("Scoreboard", sx + 5, sy + 45, 0xFFFFFF);
+        int sw = (int)(95 * PvPClient.instance.scoreboardScale);
+        int sh = (int)(100 * PvPClient.instance.scoreboardScale);
+        drawRect(sx, sy, sx + sw, sy + sh, draggingScoreboard ? 0x99F59E0B : 0x66F59E0B);
+        drawOutline(sx, sy, sx + sw, sy + sh, 0xFFF59E0B);
+        fontRendererObj.drawStringWithShadow("Scoreboard", sx + 5, sy + 45, 0xFFFFFF);
 
-        if (draggingFps) { PvPClient.instance.fpsX = mouseX - 25; PvPClient.instance.fpsY = mouseY - 7; }
-        if (draggingScore) { PvPClient.instance.scoreboardX = mouseX - (width - 55); PvPClient.instance.scoreboardY = mouseY - (height / 2); }
+        // Update Position while Dragging
+        if (draggingFps) {
+            PvPClient.instance.fpsX = mouseX - dragOffsetX;
+            PvPClient.instance.fpsY = mouseY - dragOffsetY;
+        } else if (draggingKeystrokes) {
+            PvPClient.instance.keystrokesX = mouseX - dragOffsetX;
+            PvPClient.instance.keystrokesY = mouseY - dragOffsetY;
+        } else if (draggingArmor) {
+            PvPClient.instance.armorX = mouseX - dragOffsetX;
+            PvPClient.instance.armorY = mouseY - dragOffsetY;
+        } else if (draggingPotion) {
+            PvPClient.instance.potionX = mouseX - dragOffsetX;
+            PvPClient.instance.potionY = mouseY - dragOffsetY;
+        } else if (draggingScoreboard) {
+            PvPClient.instance.scoreboardX = mouseX - dragOffsetX - (width - 100);
+            PvPClient.instance.scoreboardY = mouseY - dragOffsetY - (height / 2 - 50);
+        }
 
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    private void drawOutline(int left, int top, int right, int bottom, int color) {
+        drawHorizontalLine(left, right, top, color);
+        drawHorizontalLine(left, right, bottom, color);
+        drawVerticalLine(left, top, bottom, color);
+        drawVerticalLine(right, top, bottom, color);
     }
 
     @Override
@@ -61,40 +133,80 @@ public class GuiHudEditor extends GuiScreen {
         if (wheel != 0) {
             int mx = Mouse.getEventX() * this.width / this.mc.displayWidth;
             int my = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+            float delta = wheel > 0 ? 0.05F : -0.05F;
 
-            // Account for scale in hover detection
-            int fw = (int)(50 * PvPClient.instance.fpsScale);
-            if (mx >= PvPClient.instance.fpsX && mx <= PvPClient.instance.fpsX + fw) {
-                PvPClient.instance.fpsScale = Math.max(0.5F, PvPClient.instance.fpsScale + (wheel > 0 ? 0.1F : -0.1F));
+            // 1. FPS Scale
+            int fx = PvPClient.instance.fpsX, fy = PvPClient.instance.fpsY;
+            if (isHovered(fx, fy, (int)(65 * PvPClient.instance.fpsScale), (int)(26 * PvPClient.instance.fpsScale), mx, my)) {
+                PvPClient.instance.fpsScale = Math.max(0.5F, Math.min(2.0F, PvPClient.instance.fpsScale + delta));
+                return;
             }
+            // 2. Keystrokes Scale
+            int kx = PvPClient.instance.keystrokesX, ky = PvPClient.instance.keystrokesY;
+            if (isHovered(kx, ky, (int)(54 * PvPClient.instance.keystrokesScale), (int)(66 * PvPClient.instance.keystrokesScale), mx, my)) {
+                PvPClient.instance.keystrokesScale = Math.max(0.5F, Math.min(2.0F, PvPClient.instance.keystrokesScale + delta));
+                return;
+            }
+            // 3. Armor Scale
+            int ax = PvPClient.instance.armorX, ay = PvPClient.instance.armorY;
+            if (isHovered(ax, ay, (int)(55 * PvPClient.instance.armorScale), (int)(72 * PvPClient.instance.armorScale), mx, my)) {
+                PvPClient.instance.armorScale = Math.max(0.5F, Math.min(2.0F, PvPClient.instance.armorScale + delta));
+                return;
+            }
+            // 4. Potion Scale
+            int px = PvPClient.instance.potionX, py = PvPClient.instance.potionY;
+            if (isHovered(px, py, (int)(85 * PvPClient.instance.potionScale), (int)(45 * PvPClient.instance.potionScale), mx, my)) {
+                PvPClient.instance.potionScale = Math.max(0.5F, Math.min(2.0F, PvPClient.instance.potionScale + delta));
+                return;
+            }
+            // 5. Scoreboard Scale
             int sx = width - 100 + PvPClient.instance.scoreboardX;
             int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
-            int sw = (int)(90 * PvPClient.instance.scoreboardScale);
-            int sh = (int)(100 * PvPClient.instance.scoreboardScale);
-            if (mx >= sx && mx <= sx + sw && my >= sy && my <= sy + sh) {
-                PvPClient.instance.scoreboardScale = Math.max(0.5F, PvPClient.instance.scoreboardScale + (wheel > 0 ? 0.1F : -0.1F));
+            if (isHovered(sx, sy, (int)(95 * PvPClient.instance.scoreboardScale), (int)(100 * PvPClient.instance.scoreboardScale), mx, my)) {
+                PvPClient.instance.scoreboardScale = Math.max(0.5F, Math.min(2.0F, PvPClient.instance.scoreboardScale + delta));
             }
         }
     }
 
     @Override
     protected void mouseClicked(int mx, int my, int btn) {
-        int fw = (int)(50 * PvPClient.instance.fpsScale);
-        int fh = (int)(15 * PvPClient.instance.fpsScale);
-        if (mx >= PvPClient.instance.fpsX && mx <= PvPClient.instance.fpsX + fw && my >= PvPClient.instance.fpsY && my <= PvPClient.instance.fpsY + fh) draggingFps = true;
-
-        int sx = width - 100 + PvPClient.instance.scoreboardX;
-        int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
-        int sw = (int)(90 * PvPClient.instance.scoreboardScale);
-        int sh = (int)(100 * PvPClient.instance.scoreboardScale);
-        if (mx >= sx && mx <= sx + sw && my >= sy && my <= sy + sh) draggingScore = true;
+        if (btn == 0) {
+            int fx = PvPClient.instance.fpsX, fy = PvPClient.instance.fpsY;
+            if (isHovered(fx, fy, (int)(65 * PvPClient.instance.fpsScale), (int)(26 * PvPClient.instance.fpsScale), mx, my)) {
+                draggingFps = true; dragOffsetX = mx - fx; dragOffsetY = my - fy; super.mouseClicked(mx, my, btn); return;
+            }
+            int kx = PvPClient.instance.keystrokesX, ky = PvPClient.instance.keystrokesY;
+            if (isHovered(kx, ky, (int)(54 * PvPClient.instance.keystrokesScale), (int)(66 * PvPClient.instance.keystrokesScale), mx, my)) {
+                draggingKeystrokes = true; dragOffsetX = mx - kx; dragOffsetY = my - ky; super.mouseClicked(mx, my, btn); return;
+            }
+            int ax = PvPClient.instance.armorX, ay = PvPClient.instance.armorY;
+            if (isHovered(ax, ay, (int)(55 * PvPClient.instance.armorScale), (int)(72 * PvPClient.instance.armorScale), mx, my)) {
+                draggingArmor = true; dragOffsetX = mx - ax; dragOffsetY = my - ay; super.mouseClicked(mx, my, btn); return;
+            }
+            int px = PvPClient.instance.potionX, py = PvPClient.instance.potionY;
+            if (isHovered(px, py, (int)(85 * PvPClient.instance.potionScale), (int)(45 * PvPClient.instance.potionScale), mx, my)) {
+                draggingPotion = true; dragOffsetX = mx - px; dragOffsetY = my - py; super.mouseClicked(mx, my, btn); return;
+            }
+            int sx = width - 100 + PvPClient.instance.scoreboardX;
+            int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
+            if (isHovered(sx, sy, (int)(95 * PvPClient.instance.scoreboardScale), (int)(100 * PvPClient.instance.scoreboardScale), mx, my)) {
+                draggingScoreboard = true; dragOffsetX = mx - sx; dragOffsetY = my - sy; super.mouseClicked(mx, my, btn); return;
+            }
+        }
         super.mouseClicked(mx, my, btn);
     }
 
     @Override
     protected void mouseReleased(int mx, int my, int state) {
         draggingFps = false;
-        draggingScore = false;
+        draggingKeystrokes = false;
+        draggingArmor = false;
+        draggingPotion = false;
+        draggingScoreboard = false;
         super.mouseReleased(mx, my, state);
     }
-}
+
+    private boolean isHovered(int x, int y, int w, int h, int mx, int my) {
+        return mx >= x && mx <= x + w && my >= y && my <= y + h;
+    }
+}

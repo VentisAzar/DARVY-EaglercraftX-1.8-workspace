@@ -248,11 +248,9 @@ public class PlayerControllerMP {
 
 	public boolean onPlayerDamageBlock(BlockPos posBlock, EnumFacing directionFacing) {
 		this.syncCurrentPlayItem();
-		if (this.blockHitDelay > 0) {
-			--this.blockHitDelay;
-			return true;
-		} else if (this.currentGameType.isCreative() && this.mc.theWorld.getWorldBorder().contains(posBlock)) {
-			this.blockHitDelay = 5;
+		this.blockHitDelay = 0;
+		if (this.currentGameType.isCreative() && this.mc.theWorld.getWorldBorder().contains(posBlock)) {
+			this.blockHitDelay = 0;
 			this.netClientHandler.addToSendQueue(new C07PacketPlayerDigging(
 					C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, posBlock, directionFacing));
 			clickBlockCreative(this.mc, this, posBlock, directionFacing);
@@ -281,7 +279,7 @@ public class PlayerControllerMP {
 					this.onPlayerDestroyBlock(posBlock, directionFacing);
 					this.curBlockDamageMP = 0.0F;
 					this.stepSoundTickCounter = 0.0F;
-					this.blockHitDelay = 5;
+					this.blockHitDelay = 0;
 				}
 
 				this.mc.theWorld.sendBlockBreakProgress(this.mc.thePlayer.getEntityId(), this.currentBlock,
