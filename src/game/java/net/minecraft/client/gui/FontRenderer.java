@@ -23,6 +23,7 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.PvPClient;
 
 /**+
  * This portion of EaglercraftX contains deobfuscated Minecraft 1.8 source code.
@@ -205,7 +206,7 @@ public class FontRenderer implements IResourceManagerReloadListener {
 			return 4.0F;
 		} else {
 			int i = FontMappingHelper.lookupChar(parChar1, false);
-			return i != -1 && !this.unicodeFlag ? this.renderDefaultChar(i, parFlag)
+			return i != -1 && !this.getUnicodeFlag() ? this.renderDefaultChar(i, parFlag)
 					: this.renderUnicodeChar(parChar1, parFlag);
 		}
 	}
@@ -408,8 +409,9 @@ public class FontRenderer implements IResourceManagerReloadListener {
 					c0 = c1;
 				}
 
-				float f1 = this.unicodeFlag ? 0.5F : 1.0F;
-				boolean flag = (c0 == 0 || j == -1 || this.unicodeFlag) && parFlag;
+				boolean useUnicode = this.getUnicodeFlag();
+				float f1 = useUnicode ? 0.5F : 1.0F;
+				boolean flag = (c0 == 0 || j == -1 || useUnicode) && parFlag;
 				if (flag) {
 					this.posX -= f1;
 					this.posY -= f1;
@@ -576,7 +578,7 @@ public class FontRenderer implements IResourceManagerReloadListener {
 			return 4;
 		} else {
 			int i = FontMappingHelper.lookupChar(character, false);
-			if (character > 0 && i != -1 && !this.unicodeFlag) {
+			if (character > 0 && i != -1 && !this.getUnicodeFlag()) {
 				return this.charWidth[i];
 			} else if (this.glyphWidth[character] != 0) {
 				int j = this.glyphWidth[character] >>> 4;
@@ -706,7 +708,7 @@ public class FontRenderer implements IResourceManagerReloadListener {
 	 * rendered with Unicode fonts instead of the default.png font.
 	 */
 	public boolean getUnicodeFlag() {
-		return this.unicodeFlag;
+		return this.unicodeFlag || (PvPClient.instance != null && PvPClient.instance.pvp_customFont);
 	}
 
 	/**+

@@ -247,12 +247,14 @@ public class GuiIngame extends Gui {
 
 		this.overlayDebug.renderDebugInfo(scaledresolution);
 
-        // CRAZY OPTIMIZATION: Direct integer access to FPS counter
+        // Independent FPS Counter HUD
         if (PvPClient.instance.pvp_fpsHud) {
             GlStateManager.pushMatrix();
             GlStateManager.translate((float)PvPClient.instance.fpsX, (float)PvPClient.instance.fpsY, 0.0F);
             GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
-            mc.fontRendererObj.drawStringWithShadow("\u00a7b" + Minecraft.getDebugFPS() + " FPS", 0, 0, 0xFFFFFF);
+            String fpsStr = "\u00a7bFPS: \u00a7f" + Minecraft.getDebugFPS();
+            drawRect(-2, -2, mc.fontRendererObj.getStringWidth(fpsStr) + 4, 11, 0x70000000);
+            mc.fontRendererObj.drawStringWithShadow(fpsStr, 0, 0, 0xFFFFFF);
             GlStateManager.popMatrix();
         }
 
@@ -1311,14 +1313,27 @@ public class GuiIngame extends Gui {
 	private void renderPvPHUD(ScaledResolution scaledresolution) {
 		if (this.mc.gameSettings.showDebugInfo) return;
 
-		// 1. CPS HUD
+		// 1. CPS HUD (Independently movable)
 		if (PvPClient.instance.pvp_cpsHud) {
 			GlStateManager.pushMatrix();
-			GlStateManager.translate((float)PvPClient.instance.fpsX, (float)(PvPClient.instance.fpsY + 14), 0.0F);
-			GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
+			GlStateManager.translate((float)PvPClient.instance.cpsX, (float)PvPClient.instance.cpsY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.cpsScale, PvPClient.instance.cpsScale, 1.0F);
 			String cpsStr = "\u00a7bCPS: \u00a7f" + PvPClient.instance.getLeftCPS() + " \u00a77| \u00a7f" + PvPClient.instance.getRightCPS();
 			drawRect(-2, -2, mc.fontRendererObj.getStringWidth(cpsStr) + 4, 11, 0x70000000);
 			mc.fontRendererObj.drawStringWithShadow(cpsStr, 0, 0, 0xFFFFFF);
+			GlStateManager.popMatrix();
+		}
+
+		// Ping HUD (Independently movable)
+		if (PvPClient.instance.pvp_pingHud) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.pingX, (float)PvPClient.instance.pingY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.pingScale, PvPClient.instance.pingScale, 1.0F);
+			int ping = PvPClient.instance.getPing();
+			String pingColor = ping < 80 ? "\u00a7a" : (ping < 150 ? "\u00a7e" : "\u00a7c");
+			String pingStr = "\u00a7bPing: " + pingColor + ping + "ms";
+			drawRect(-2, -2, mc.fontRendererObj.getStringWidth(pingStr) + 4, 11, 0x70000000);
+			mc.fontRendererObj.drawStringWithShadow(pingStr, 0, 0, 0xFFFFFF);
 			GlStateManager.popMatrix();
 		}
 

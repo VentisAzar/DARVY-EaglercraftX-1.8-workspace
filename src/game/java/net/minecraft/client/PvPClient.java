@@ -1,5 +1,6 @@
 package net.minecraft.client;
 
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.settings.KeyBinding;
 import net.lax1dude.eaglercraft.v1_8.EagRuntime;
 import java.util.ArrayList;
@@ -13,19 +14,22 @@ public class PvPClient {
     public boolean entityFrustumCulling = true;
     public boolean fastMath = true;
 
-    // PvP Core Modules
-    public boolean pvp_fullbright = false;
-    public boolean pvp_animations17 = true;
+    // PvP Combat Modules
     public boolean pvp_toggleSprint = false;
+    public boolean pvp_animations17 = true;
     public boolean pvp_noHurtCam = false;
     public boolean pvp_lowFire = true;
 
     // HUD Display Modules
     public boolean pvp_fpsHud = true;
     public boolean pvp_cpsHud = true;
+    public boolean pvp_pingHud = true;
     public boolean pvp_keystrokesHud = true;
     public boolean pvp_armorStatus = true;
     public boolean pvp_potionHud = true;
+
+    // Visuals & Customization Modules
+    public boolean pvp_fullbright = false;
     public boolean pvp_customCrosshair = false;
     public boolean pvp_blockOutline = true;
     public boolean pvp_customFont = false;
@@ -33,14 +37,20 @@ public class PvPClient {
     // HUD Positions & Scaling
     public int fpsX = 5, fpsY = 5;
     public float fpsScale = 1.0F;
+
+    public int cpsX = 5, cpsY = 20;
+    public float cpsScale = 1.0F;
+
+    public int pingX = 5, pingY = 35;
+    public float pingScale = 1.0F;
     
-    public int keystrokesX = 5, keystrokesY = 40;
+    public int keystrokesX = 5, keystrokesY = 55;
     public float keystrokesScale = 1.0F;
     
-    public int armorX = 5, armorY = 130;
+    public int armorX = 5, armorY = 145;
     public float armorScale = 1.0F;
     
-    public int potionX = 5, potionY = 195;
+    public int potionX = 5, potionY = 210;
     public float potionScale = 1.0F;
 
     public int scoreboardX = 0, scoreboardY = 0;
@@ -49,9 +59,6 @@ public class PvPClient {
     // CPS Tracker State
     private final List<Long> leftClicks = new ArrayList<>();
     private final List<Long> rightClicks = new ArrayList<>();
-
-    // Music System
-    public String currentTrack = "None";
 
     public void onTick() {
         Minecraft mc = Minecraft.getMinecraft();
@@ -90,9 +97,31 @@ public class PvPClient {
         return this.rightClicks.size();
     }
 
+    public int getPing() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer != null && mc.getNetHandler() != null) {
+            NetworkPlayerInfo info = mc.getNetHandler().getPlayerInfo(mc.thePlayer.getUniqueID());
+            if (info != null) {
+                return Math.max(0, info.getResponseTime());
+            }
+        }
+        return 0;
+    }
+
+    public void resetDefaultPositions() {
+        this.fpsX = 5; this.fpsY = 5; this.fpsScale = 1.0F;
+        this.cpsX = 5; this.cpsY = 20; this.cpsScale = 1.0F;
+        this.pingX = 5; this.pingY = 35; this.pingScale = 1.0F;
+        this.keystrokesX = 5; this.keystrokesY = 55; this.keystrokesScale = 1.0F;
+        this.armorX = 5; this.armorY = 145; this.armorScale = 1.0F;
+        this.potionX = 5; this.potionY = 210; this.potionScale = 1.0F;
+        this.scoreboardX = 0; this.scoreboardY = 0; this.scoreboardScale = 1.0F;
+    }
+
     public void playMusic(String url) {
-        this.currentTrack = url;
-        EagRuntime.openLink(url);
+        if (url != null && !url.isEmpty()) {
+            EagRuntime.openLink(url);
+        }
     }
 
     public void toggleFullbright() { this.pvp_fullbright = !this.pvp_fullbright; }
