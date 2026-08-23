@@ -592,6 +592,10 @@ public class GuiMainMenu extends GuiScreen implements GuiYesNoCallback {
 		tessellator.draw();
 	}
 
+	private int dashboardTab = 0;
+	private static final String[] DASHBOARD_TABS = { "Home", "Mods", "Settings", "Social" };
+	private static final String[] DASHBOARD_ICONS = { "\u2302", "\u2699", "\u2630", "\u2764" };
+
 	/**+
 	 * Draws the screen and all the components in it. Args : mouseX,
 	 * mouseY, renderPartialTicks
@@ -604,56 +608,143 @@ public class GuiMainMenu extends GuiScreen implements GuiYesNoCallback {
 			this.drawPanorama(i, j, f);
 		}
 		GlStateManager.enableAlpha();
-		short short1 = 274;
-		int k = this.width / 2 - short1 / 2;
-		byte b0 = 30;
 		if (enableBlur) {
 			this.drawGradientRect(0, 0, this.width, this.height, -2130706433, 16777215);
 			this.drawGradientRect(0, 0, this.width, this.height, 0, Integer.MIN_VALUE);
 		}
-		this.mc.getTextureManager().bindTexture(minecraftTitleTextures);
-		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-		boolean minc = (double) this.updateCounter < 1.0E-4D;
-		if (this.isDefault) {
-			minc = !minc;
-		}
-		if (minc) {
-			this.drawTexturedModalRect(k + 0, b0 + 0, 0, 0, 99, 44);
-			this.drawTexturedModalRect(k + 99, b0 + 0, 129, 0, 27, 44);
-			this.drawTexturedModalRect(k + 99 + 26, b0 + 0, 126, 0, 3, 44);
-			this.drawTexturedModalRect(k + 99 + 26 + 3, b0 + 0, 99, 0, 26, 44);
-			this.drawTexturedModalRect(k + 154, b0 + 0, 0, 45, 155, 44);
-		} else {
-			this.drawTexturedModalRect(k + 0, b0 + 0, 0, 0, 155, 44);
-			this.drawTexturedModalRect(k + 155, b0 + 0, 0, 45, 155, 44);
+
+		// === DARVY CLIENT DASHBOARD OVERLAY ===
+		int navW = 48;
+		int dashX = 10;
+		int dashY = 10;
+		int dashW = this.width - 20;
+		int dashH = this.height - 20;
+
+		// Frosted backdrop behind entire dashboard
+		RenderGuiUtils.drawGlassCard(dashX, dashY, dashW, dashH, 8.0F, 0xCC080A12, 0x20FFFFFF);
+
+		// --- Left Navigation Rail ---
+		RenderGuiUtils.drawRoundedRect(dashX, dashY, navW, dashH, 8.0F, 0xEE0A0D16);
+		RenderGuiUtils.drawLine(dashX + navW, dashY + 6, dashX + navW, dashY + dashH - 6, 1.0F, 0x22FFFFFF);
+
+		// Brand mark at top of rail
+		drawCenteredString(this.fontRendererObj, "\u00a7b\u00a7lD", dashX + navW / 2, dashY + 8, 0xFFFFFF);
+		RenderGuiUtils.drawLine(dashX + 8, dashY + 20, dashX + navW - 8, dashY + 20, 1.0F, 0x30FFFFFF);
+
+		// Nav tab buttons
+		for (int t = 0; t < DASHBOARD_TABS.length; t++) {
+			int tabY = dashY + 28 + t * 36;
+			boolean hovered = i >= dashX + 4 && i <= dashX + navW - 4 && j >= tabY && j <= tabY + 30;
+			boolean selected = dashboardTab == t;
+
+			if (selected) {
+				RenderGuiUtils.drawRoundedRect(dashX + 4, tabY, navW - 8, 30, 4.0F, 0xFF1C2538);
+				RenderGuiUtils.drawRoundedRect(dashX + 4, tabY + 3, 3, 24, 1.5F, 0xFF3B82F6);
+			} else if (hovered) {
+				RenderGuiUtils.drawRoundedRect(dashX + 4, tabY, navW - 8, 30, 4.0F, 0x40FFFFFF);
+			}
+
+			drawCenteredString(this.fontRendererObj, (selected ? "\u00a7b" : "\u00a77") + DASHBOARD_ICONS[t], dashX + navW / 2, tabY + 6, 0xFFFFFF);
+			drawCenteredString(this.fontRendererObj, (selected ? "\u00a7f" : "\u00a78") + DASHBOARD_TABS[t], dashX + navW / 2, tabY + 18, 0xFFFFFF);
 		}
 
-		boolean isForkLabel = ((this.openGLWarning1 != null && this.openGLWarning1.length() > 0)
-				|| (this.openGLWarning2 != null && this.openGLWarning2.length() > 0));
+		// --- Main Content Area ---
+		int contentX = dashX + navW + 10;
+		int contentY = dashY + 10;
+		int contentW = dashW - navW - 20;
+		int contentH = dashH - 20;
 
-		if (isForkLabel) {
-			drawRect(this.field_92022_t - 3, this.field_92021_u - 3, this.field_92020_v + 3, this.field_92019_w,
-					1428160512);
-			if (this.openGLWarning1 != null)
-				this.drawString(this.fontRendererObj, this.openGLWarning1, this.field_92022_t, this.field_92021_u, -1);
-			if (this.openGLWarning2 != null)
-				this.drawString(this.fontRendererObj, this.openGLWarning2, (this.width - this.field_92024_r) / 2,
-						this.field_92021_u + 12, -1);
+		if (dashboardTab == 0) {
+			// HOME TAB
+			// Welcome header
+			drawString(this.fontRendererObj, "\u00a7f\u00a7lDARVY \u00a7bClient Dashboard", contentX, contentY, 0xFFFFFF);
+			drawString(this.fontRendererObj, "\u00a78Welcome back!", contentX, contentY + 12, 0x999999);
+
+			// Quick Play Buttons row
+			int qpY = contentY + 30;
+			int qpW = Math.min(100, (contentW - 24) / 4);
+			for (int q = 0; q < 4; q++) {
+				int qx = contentX + q * (qpW + 8);
+				String[] qLabels = { "Singleplayer", "Multiplayer", "Edit Profile", "Options" };
+				boolean qHov = i >= qx && i <= qx + qpW && j >= qpY && j <= qpY + 20;
+				RenderGuiUtils.drawGlassCard(qx, qpY, qpW, 20, 4.0F,
+					qHov ? 0xFF1C2538 : 0xFF121620, qHov ? 0xFF3B82F6 : 0x30FFFFFF);
+				drawCenteredString(this.fontRendererObj, "\u00a7f" + qLabels[q], qx + qpW / 2, qpY + 6, 0xFFFFFF);
+			}
+
+			// Cards area below quick play
+			int cardsY = qpY + 30;
+			int cardH1 = (contentH - (cardsY - contentY) - 8);
+			int halfW = (contentW - 8) / 2;
+
+			// NEWS CARD (left)
+			RenderGuiUtils.drawGlassCard(contentX, cardsY, halfW, cardH1, 6.0F, 0xCC101418, 0x20FFFFFF);
+			drawString(this.fontRendererObj, "\u00a7f\u00a7lNews & Announcements", contentX + 8, cardsY + 6, 0xFFFFFF);
+			RenderGuiUtils.drawLine(contentX + 8, cardsY + 18, contentX + halfW - 8, cardsY + 18, 1.0F, 0x22FFFFFF);
+			drawString(this.fontRendererObj, "\u00a7b\u25CF \u00a7fDARVY v2.0 Released", contentX + 8, cardsY + 24, 0xFFFFFF);
+			drawString(this.fontRendererObj, "\u00a78Full UI overhaul with glassmorphic design", contentX + 16, cardsY + 36, 0x888888);
+			drawString(this.fontRendererObj, "\u00a7b\u25CF \u00a7fNew HUD Widgets", contentX + 8, cardsY + 52, 0xFFFFFF);
+			drawString(this.fontRendererObj, "\u00a78Analog clock, calendar, cooldowns & more", contentX + 16, cardsY + 64, 0x888888);
+			drawString(this.fontRendererObj, "\u00a7b\u25CF \u00a7fChat Macros System", contentX + 8, cardsY + 80, 0xFFFFFF);
+			drawString(this.fontRendererObj, "\u00a78Bind hotkeys to frequent commands", contentX + 16, cardsY + 92, 0x888888);
+
+			int rightX = contentX + halfW + 8;
+			int topCardH = (cardH1 - 8) / 2;
+
+			// CHANGELOG CARD (top right)
+			RenderGuiUtils.drawGlassCard(rightX, cardsY, halfW, topCardH, 6.0F, 0xCC101418, 0x20FFFFFF);
+			drawString(this.fontRendererObj, "\u00a7f\u00a7lChangelog", rightX + 8, cardsY + 6, 0xFFFFFF);
+			RenderGuiUtils.drawLine(rightX + 8, cardsY + 18, rightX + halfW - 8, cardsY + 18, 1.0F, 0x22FFFFFF);
+			String[] changelogItems = {
+				"Glass card hotbar with glow",
+				"Cooldown tracker for Pearl/Gapple",
+				"Digital & analog clock HUD",
+				"Coordinate & direction pill",
+				"Chat macro key bindings"
+			};
+			for (int ci = 0; ci < changelogItems.length && (cardsY + 24 + ci * 12) < cardsY + topCardH - 4; ci++) {
+				drawString(this.fontRendererObj, "\u00a7a+ \u00a77" + changelogItems[ci], rightX + 8, cardsY + 24 + ci * 12, 0xFFFFFF);
+			}
+
+			// DISCORD MODULE (bottom right)
+			int discY = cardsY + topCardH + 8;
+			int discH = cardH1 - topCardH - 8;
+			RenderGuiUtils.drawGlassCard(rightX, discY, halfW, discH, 6.0F, 0xCC101418, 0x20FFFFFF);
+			drawString(this.fontRendererObj, "\u00a79\u00a7lDiscord \u00a78Community", rightX + 8, discY + 6, 0xFFFFFF);
+			RenderGuiUtils.drawLine(rightX + 8, discY + 18, rightX + halfW - 8, discY + 18, 1.0F, 0x22FFFFFF);
+
+			// Online pulse indicator
+			RenderGuiUtils.drawCircle(rightX + 14, discY + 28, 3.0F, 0xFF10B981);
+			drawString(this.fontRendererObj, "\u00a7aOnline \u00a78\u2022 \u00a772,450+ Members", rightX + 22, discY + 24, 0xFFFFFF);
+
+			// Join button
+			int joinX = rightX + halfW - 68;
+			int joinY = discY + discH - 22;
+			boolean joinHov = i >= joinX && i <= joinX + 60 && j >= joinY && j <= joinY + 18;
+			RenderGuiUtils.drawRoundedRect(joinX, joinY, 60, 18, 4.0F, joinHov ? 0xFF5865F2 : 0xFF4752C4);
+			RenderGuiUtils.drawRoundedOutline(joinX, joinY, 60, 18, 4.0F, 1.0F, joinHov ? 0xFF7289DA : 0xFF5865F2);
+			drawCenteredString(this.fontRendererObj, "\u00a7fJoin", joinX + 30, joinY + 5, 0xFFFFFF);
+
+		} else if (dashboardTab == 1) {
+			// MODS TAB - redirect to ClickGUI
+			drawCenteredString(this.fontRendererObj, "\u00a7f\u00a7lClient Modules", contentX + contentW / 2, contentY + contentH / 2 - 14, 0xFFFFFF);
+			drawCenteredString(this.fontRendererObj, "\u00a78Press \u00a7bRight Shift \u00a78or click here to open Mod Menu", contentX + contentW / 2, contentY + contentH / 2, 0xAAAAAA);
+
+		} else if (dashboardTab == 2) {
+			// SETTINGS TAB - redirect to options
+			drawCenteredString(this.fontRendererObj, "\u00a7f\u00a7lGame Settings", contentX + contentW / 2, contentY + contentH / 2 - 14, 0xFFFFFF);
+			drawCenteredString(this.fontRendererObj, "\u00a78Click here to open Game Options", contentX + contentW / 2, contentY + contentH / 2, 0xAAAAAA);
+
+		} else if (dashboardTab == 3) {
+			// SOCIAL TAB
+			drawString(this.fontRendererObj, "\u00a7f\u00a7lSocial & Community", contentX, contentY, 0xFFFFFF);
+			drawString(this.fontRendererObj, "\u00a78Connect with the DARVY community", contentX, contentY + 12, 0x999999);
+
+			RenderGuiUtils.drawGlassCard(contentX, contentY + 30, contentW, 40, 6.0F, 0xCC101418, 0x20FFFFFF);
+			drawString(this.fontRendererObj, "\u00a79Discord \u00a78\u2022 \u00a77Join our server for updates and PvP tips", contentX + 10, contentY + 46, 0xFFFFFF);
 		}
 
-		GlStateManager.pushMatrix();
-		GlStateManager.translate((float) (this.width / 2 + 90), 70.0F, 0.0F);
-		GlStateManager.rotate(isForkLabel ? -12.0F : -20.0F, 0.0F, 0.0F, 1.0F);
-		float f1 = 1.8F - MathHelper
-				.abs(MathHelper.sin((float) (Minecraft.getSystemTime() % 1000L) / 1000.0F * 3.1415927F * 2.0F) * 0.1F);
-		f1 = f1 * 100.0F / (float) (this.fontRendererObj.getStringWidth(this.splashText) + 32);
-		if (isForkLabel) {
-			f1 *= 0.8f;
-		}
-		GlStateManager.scale(f1, f1, f1);
-		this.drawCenteredString(this.fontRendererObj, this.splashText, 0, -8, -256);
-		GlStateManager.popMatrix();
-
+		// Version labels (keep vanilla behavior)
 		String s = EaglercraftVersion.mainMenuStringA;
 		if (this.mc.isDemo()) {
 			s += " Demo";
@@ -671,56 +762,6 @@ public class GuiMainMenu extends GuiScreen implements GuiYesNoCallback {
 		}
 		this.drawString(this.fontRendererObj, s1, this.width - this.fontRendererObj.getStringWidth(s1) - 2,
 				this.height - 10, -1);
-
-		if (!this.mc.isDemo()) {
-			GlStateManager.pushMatrix();
-			GlStateManager.scale(0.75f, 0.75f, 0.75f);
-			int www = 0;
-			int hhh = 0;
-			s1 = EaglercraftVersion.mainMenuStringG;
-			if (s1 != null) {
-				www = this.fontRendererObj.getStringWidth(s1);
-				hhh += 10;
-			}
-			s1 = EaglercraftVersion.mainMenuStringH;
-			if (s1 != null) {
-				www = Math.max(www, this.fontRendererObj.getStringWidth(s1));
-				hhh += 10;
-			}
-			if (www > 0) {
-				drawRect(0, 0, www + 6, hhh + 4, 0x55200000);
-				s1 = EaglercraftVersion.mainMenuStringG;
-				if (s1 != null) {
-					www = this.fontRendererObj.getStringWidth(s1);
-					this.drawString(this.fontRendererObj, s1, 3, 3, 0xFFFFFF99);
-				}
-				s1 = EaglercraftVersion.mainMenuStringH;
-				if (s1 != null) {
-					www = Math.max(www, this.fontRendererObj.getStringWidth(s1));
-					this.drawString(this.fontRendererObj, s1, 3, 13, 0xFFFFFF99);
-				}
-			}
-			if (EagRuntime.getConfiguration().isEnableSignatureBadge()) {
-				UpdateCertificate cert = UpdateService.getClientCertificate();
-				GlStateManager.scale(0.66667f, 0.66667f, 0.66667f);
-				if (cert != null) {
-					s1 = I18n.format("update.digitallySigned",
-							GuiUpdateVersionSlot.dateFmt.format(new Date(cert.sigTimestamp)));
-				} else {
-					s1 = I18n.format("update.signatureInvalid");
-				}
-				www = this.fontRendererObj.getStringWidth(s1) + 14;
-				drawRect((this.width * 2 - www) / 2, 0, (this.width * 2 - www) / 2 + www, 12, 0x33000000);
-				GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-				this.drawString(this.fontRendererObj, s1, (this.width * 2 - www) / 2 + 12, 2,
-						cert != null ? 0xFFFFFF99 : 0xFFFF5555);
-				GlStateManager.scale(0.6f, 0.6f, 0.6f);
-				mc.getTextureManager().bindTexture(eaglerGuiTextures);
-				drawTexturedModalRect((int) ((this.width * 2 - www) / 2 / 0.6f) + 2, 1, cert != null ? 32 : 16, 0, 16,
-						16);
-			}
-			GlStateManager.popMatrix();
-		}
 
 		String lbl = "CREDITS.txt";
 		int w = fontRendererObj.getStringWidth(lbl) * 3 / 4;

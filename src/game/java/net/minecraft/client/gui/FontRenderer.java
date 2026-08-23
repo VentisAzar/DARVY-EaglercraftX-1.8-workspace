@@ -708,7 +708,7 @@ public class FontRenderer implements IResourceManagerReloadListener {
 	 * rendered with Unicode fonts instead of the default.png font.
 	 */
 	public boolean getUnicodeFlag() {
-		return this.unicodeFlag || (PvPClient.instance != null && PvPClient.instance.pvp_customFont);
+		return this.unicodeFlag;
 	}
 
 	/**+

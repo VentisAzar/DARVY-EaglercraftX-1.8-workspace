@@ -1116,6 +1116,11 @@ public class Minecraft implements IThreadListener {
 				ItemStack itemstack1 = this.thePlayer.inventory.getCurrentItem();
 				if (itemstack1 != null
 						&& this.playerController.sendUseItem(this.thePlayer, this.theWorld, itemstack1)) {
+					if (itemstack1.getItem() == net.minecraft.init.Items.ender_pearl) {
+						PvPClient.instance.registerEnderPearlUse();
+					} else if (itemstack1.getItem() == net.minecraft.init.Items.golden_apple) {
+						PvPClient.instance.registerGappleUse();
+					}
 					this.entityRenderer.itemRenderer.resetEquippedProgress2();
 				}
 			}
@@ -1407,8 +1412,12 @@ public class Minecraft implements IThreadListener {
 
 			while (Keyboard.next()) {
 				int k = Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey();
-				if (k == 54 && Keyboard.getEventKeyState() && this.currentScreen == null) {
-					this.displayGuiScreen(new net.minecraft.client.gui.GuiClickGUI());
+				if (Keyboard.getEventKeyState() && this.currentScreen == null) {
+					if (k == 54) {
+						this.displayGuiScreen(new net.minecraft.client.gui.GuiClickGUI());
+					} else {
+						net.minecraft.client.gui.ChatMacroManager.instance.handleKeyPress(k);
+					}
 				}
 
 				if (k == 0x1D && (Keyboard.areKeysLocked() || isFullScreen())) {

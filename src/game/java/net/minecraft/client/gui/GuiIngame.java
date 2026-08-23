@@ -4,6 +4,9 @@ import static net.lax1dude.eaglercraft.v1_8.opengl.RealOpenGLEnums.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Calendar;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import net.lax1dude.eaglercraft.v1_8.Display;
 import net.lax1dude.eaglercraft.v1_8.EagRuntime;
@@ -247,17 +250,6 @@ public class GuiIngame extends Gui {
 
 		this.overlayDebug.renderDebugInfo(scaledresolution);
 
-        // Independent FPS Counter HUD
-        if (PvPClient.instance.pvp_fpsHud) {
-            GlStateManager.pushMatrix();
-            GlStateManager.translate((float)PvPClient.instance.fpsX, (float)PvPClient.instance.fpsY, 0.0F);
-            GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
-            String fpsStr = "\u00a7bFPS: \u00a7f" + Minecraft.getDebugFPS();
-            drawRect(-2, -2, mc.fontRendererObj.getStringWidth(fpsStr) + 4, 11, 0x70000000);
-            mc.fontRendererObj.drawStringWithShadow(fpsStr, 0, 0, 0xFFFFFF);
-            GlStateManager.popMatrix();
-        }
-
         this.renderPvPHUD(scaledresolution);
 
 		if (this.field_175195_w > 0) {
@@ -361,12 +353,33 @@ public class GuiIngame extends Gui {
 	protected void renderTooltip(ScaledResolution sr, float partialTicks) {
 		if (this.mc.getRenderViewEntity() instanceof EntityPlayer) {
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-			this.mc.getTextureManager().bindTexture(widgetsTexPath);
 			EntityPlayer entityplayer = (EntityPlayer) this.mc.getRenderViewEntity();
 			int i = sr.getScaledWidth() / 2;
 			float f = this.zLevel;
 			this.zLevel = -90.0F;
-			this.drawTexturedModalRect(i - 91, sr.getScaledHeight() - 22, 0, 0, 182, 22);
+
+			if (PvPClient.instance.pvp_customHotbar) {
+				// Modern Frosted Glass Hotbar Container
+				RenderGuiUtils.drawGlassCard(i - 92, sr.getScaledHeight() - 23, 184, 23, 5.0F, 0xB80E1118, 0x35FFFFFF);
+				
+				// Slot cell divider outlines
+				for (int s = 0; s < 9; s++) {
+					int slotX = i - 90 + s * 20;
+					int slotY = sr.getScaledHeight() - 21;
+					RenderGuiUtils.drawRoundedRect(slotX, slotY, 19, 19, 3.0F, 0x22FFFFFF);
+				}
+
+				// Smooth Selector Indicator Pill with Accent Glow
+				int selX = i - 91 + entityplayer.inventory.currentItem * 20;
+				int selY = sr.getScaledHeight() - 22;
+				RenderGuiUtils.drawGradientRoundedRect(selX, selY, 21, 21, 4.0F, 0x883B82F6, 0x551D4ED8);
+				RenderGuiUtils.drawRoundedOutline(selX, selY, 21, 21, 4.0F, 1.2F, 0xFF60A5FA);
+			} else {
+				this.mc.getTextureManager().bindTexture(widgetsTexPath);
+				this.drawTexturedModalRect(i - 91, sr.getScaledHeight() - 22, 0, 0, 182, 22);
+				this.drawTexturedModalRect(i - 91 - 1 + entityplayer.inventory.currentItem * 20,
+						sr.getScaledHeight() - 22 - 1, 0, 22, 24, 22);
+			}
 
 			if (PointerInputAbstraction.isTouchMode()) {
 				this.mc.getTextureManager().bindTexture(TouchOverlayRenderer.spriteSheet);
@@ -383,9 +396,6 @@ public class GuiIngame extends Gui {
 				hotbarAreaH = -1;
 			}
 
-			this.mc.getTextureManager().bindTexture(widgetsTexPath);
-			this.drawTexturedModalRect(i - 91 - 1 + entityplayer.inventory.currentItem * 20,
-					sr.getScaledHeight() - 22 - 1, 0, 22, 24, 22);
 			this.zLevel = f;
 			GlStateManager.enableRescaleNormal();
 			GlStateManager.enableBlend();
@@ -400,7 +410,6 @@ public class GuiIngame extends Gui {
 
 			RenderHelper.disableStandardItemLighting();
 			GlStateManager.disableRescaleNormal();
-
 			GlStateManager.disableBlend();
 		}
 	}
@@ -1313,31 +1322,84 @@ public class GuiIngame extends Gui {
 	private void renderPvPHUD(ScaledResolution scaledresolution) {
 		if (this.mc.gameSettings.showDebugInfo) return;
 
-		// 1. CPS HUD (Independently movable)
+		// 1. FPS Info Pill
+		if (PvPClient.instance.pvp_fpsHud) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.fpsX, (float)PvPClient.instance.fpsY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.fpsScale, PvPClient.instance.fpsScale, 1.0F);
+			String fpsStr = "\u00a7bFPS \u00a7f" + Minecraft.getDebugFPS();
+			int strW = mc.fontRendererObj.getStringWidth(fpsStr);
+			RenderGuiUtils.drawGlassCard(-3, -3, strW + 8, 14, 4.0F, 0xAA101014, 0x25FFFFFF);
+			mc.fontRendererObj.drawStringWithShadow(fpsStr, 1, 0, 0xFFFFFF);
+			GlStateManager.popMatrix();
+		}
+
+		// 2. CPS Info Pill
 		if (PvPClient.instance.pvp_cpsHud) {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate((float)PvPClient.instance.cpsX, (float)PvPClient.instance.cpsY, 0.0F);
 			GlStateManager.scale(PvPClient.instance.cpsScale, PvPClient.instance.cpsScale, 1.0F);
-			String cpsStr = "\u00a7bCPS: \u00a7f" + PvPClient.instance.getLeftCPS() + " \u00a77| \u00a7f" + PvPClient.instance.getRightCPS();
-			drawRect(-2, -2, mc.fontRendererObj.getStringWidth(cpsStr) + 4, 11, 0x70000000);
-			mc.fontRendererObj.drawStringWithShadow(cpsStr, 0, 0, 0xFFFFFF);
+			String cpsStr = "\u00a7bCPS \u00a7f" + PvPClient.instance.getLeftCPS() + " \u00a77| \u00a7f" + PvPClient.instance.getRightCPS();
+			int strW = mc.fontRendererObj.getStringWidth(cpsStr);
+			RenderGuiUtils.drawGlassCard(-3, -3, strW + 8, 14, 4.0F, 0xAA101014, 0x25FFFFFF);
+			mc.fontRendererObj.drawStringWithShadow(cpsStr, 1, 0, 0xFFFFFF);
 			GlStateManager.popMatrix();
 		}
 
-		// Ping HUD (Independently movable)
+		// 3. Ping Info Pill (Reliable ms lookup)
 		if (PvPClient.instance.pvp_pingHud) {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate((float)PvPClient.instance.pingX, (float)PvPClient.instance.pingY, 0.0F);
 			GlStateManager.scale(PvPClient.instance.pingScale, PvPClient.instance.pingScale, 1.0F);
 			int ping = PvPClient.instance.getPing();
 			String pingColor = ping < 80 ? "\u00a7a" : (ping < 150 ? "\u00a7e" : "\u00a7c");
-			String pingStr = "\u00a7bPing: " + pingColor + ping + "ms";
-			drawRect(-2, -2, mc.fontRendererObj.getStringWidth(pingStr) + 4, 11, 0x70000000);
-			mc.fontRendererObj.drawStringWithShadow(pingStr, 0, 0, 0xFFFFFF);
+			String pingStr = "\u00a7bPing \u00a7f" + pingColor + ping + "ms";
+			int strW = mc.fontRendererObj.getStringWidth(pingStr);
+			RenderGuiUtils.drawGlassCard(-3, -3, strW + 8, 14, 4.0F, 0xAA101014, 0x25FFFFFF);
+			mc.fontRendererObj.drawStringWithShadow(pingStr, 1, 0, 0xFFFFFF);
 			GlStateManager.popMatrix();
 		}
 
-		// 2. Keystrokes HUD
+		// 4. Digital Number Clock Info Pill
+		if (PvPClient.instance.pvp_clockHud) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.clockX, (float)PvPClient.instance.clockY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.clockScale, PvPClient.instance.clockScale, 1.0F);
+			String timeStr = "\u00a7bTime \u00a7f" + new SimpleDateFormat("HH:mm:ss").format(new Date());
+			int strW = mc.fontRendererObj.getStringWidth(timeStr);
+			RenderGuiUtils.drawGlassCard(-3, -3, strW + 8, 14, 4.0F, 0xAA101014, 0x25FFFFFF);
+			mc.fontRendererObj.drawStringWithShadow(timeStr, 1, 0, 0xFFFFFF);
+			GlStateManager.popMatrix();
+		}
+
+		// 5. Coordinates (XYZ + Facing) Info Pill
+		if (PvPClient.instance.pvp_infoPills && mc.thePlayer != null) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate((float)PvPClient.instance.coordsX, (float)PvPClient.instance.coordsY, 0.0F);
+			GlStateManager.scale(PvPClient.instance.coordsScale, PvPClient.instance.coordsScale, 1.0F);
+			int px = (int) Math.floor(mc.thePlayer.posX);
+			int py = (int) Math.floor(mc.thePlayer.posY);
+			int pz = (int) Math.floor(mc.thePlayer.posZ);
+			int facing = MathHelper.floor_double((double) (mc.thePlayer.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
+			String dir = facing == 0 ? "S" : (facing == 1 ? "W" : (facing == 2 ? "N" : "E"));
+			String coordsStr = "\u00a7bXYZ \u00a7f" + px + " " + py + " " + pz + " \u00a77[\u00a7a" + dir + "\u00a77]";
+			int strW = mc.fontRendererObj.getStringWidth(coordsStr);
+			RenderGuiUtils.drawGlassCard(-3, -3, strW + 8, 14, 4.0F, 0xAA101014, 0x25FFFFFF);
+			mc.fontRendererObj.drawStringWithShadow(coordsStr, 1, 0, 0xFFFFFF);
+			GlStateManager.popMatrix();
+		}
+
+		// 6. Analog Clock & Calendar Widget
+		if (PvPClient.instance.pvp_calendarHud) {
+			renderAnalogClockAndCalendarWidget();
+		}
+
+		// 7. Cooldown Trackers (Enderpearl & Gapple)
+		if (PvPClient.instance.pvp_cooldownsHud && mc.thePlayer != null) {
+			renderCooldownsWidget();
+		}
+
+		// 8. Keystrokes HUD
 		if (PvPClient.instance.pvp_keystrokesHud) {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate((float)PvPClient.instance.keystrokesX, (float)PvPClient.instance.keystrokesY, 0.0F);
@@ -1352,34 +1414,21 @@ public class GuiIngame extends Gui {
 			boolean rmb = mc.gameSettings.keyBindUseItem.isKeyDown();
 
 			// W key
-			drawRect(18, 0, 34, 16, w ? 0x9000E5FF : 0x70000000);
-			drawCenteredString(mc.fontRendererObj, "W", 26, 4, w ? 0x000000 : 0xFFFFFF);
-
+			renderKeyBox(18, 0, 16, 16, "W", w);
 			// A, S, D keys
-			drawRect(0, 18, 16, 34, a ? 0x9000E5FF : 0x70000000);
-			drawCenteredString(mc.fontRendererObj, "A", 8, 22, a ? 0x000000 : 0xFFFFFF);
-
-			drawRect(18, 18, 34, 34, s ? 0x9000E5FF : 0x70000000);
-			drawCenteredString(mc.fontRendererObj, "S", 26, 22, s ? 0x000000 : 0xFFFFFF);
-
-			drawRect(36, 18, 52, 34, d ? 0x9000E5FF : 0x70000000);
-			drawCenteredString(mc.fontRendererObj, "D", 44, 22, d ? 0x000000 : 0xFFFFFF);
-
+			renderKeyBox(0, 18, 16, 16, "A", a);
+			renderKeyBox(18, 18, 16, 16, "S", s);
+			renderKeyBox(36, 18, 16, 16, "D", d);
 			// LMB / RMB
-			drawRect(0, 36, 25, 52, lmb ? 0x9000E5FF : 0x70000000);
-			drawCenteredString(mc.fontRendererObj, "LMB", 12, 40, lmb ? 0x000000 : 0xFFFFFF);
-
-			drawRect(27, 36, 52, 52, rmb ? 0x9000E5FF : 0x70000000);
-			drawCenteredString(mc.fontRendererObj, "RMB", 39, 40, rmb ? 0x000000 : 0xFFFFFF);
-
+			renderKeyBox(0, 36, 25, 16, "LMB", lmb);
+			renderKeyBox(27, 36, 25, 16, "RMB", rmb);
 			// Spacebar
-			drawRect(0, 54, 52, 64, space ? 0x9000E5FF : 0x70000000);
-			drawRect(16, 58, 36, 60, space ? 0x000000 : 0xFFFFFF);
+			renderKeyBox(0, 54, 52, 10, "\u2015\u2015", space);
 
 			GlStateManager.popMatrix();
 		}
 
-		// 3. Armor Status HUD
+		// 9. Armor Durability Status HUD
 		if (PvPClient.instance.pvp_armorStatus && mc.thePlayer != null) {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate((float)PvPClient.instance.armorX, (float)PvPClient.instance.armorY, 0.0F);
@@ -1390,22 +1439,23 @@ public class GuiIngame extends Gui {
 			for (int slot = 3; slot >= 0; slot--) {
 				ItemStack armor = mc.thePlayer.inventory.armorItemInSlot(slot);
 				if (armor != null) {
+					RenderGuiUtils.drawGlassCard(-2, yOffset - 2, 60, 20, 4.0F, 0xAA101014, 0x25FFFFFF);
 					mc.getRenderItem().renderItemAndEffectIntoGUI(armor, 0, yOffset);
 					int maxDurability = armor.getMaxDamage();
 					if (maxDurability > 0) {
 						int dur = maxDurability - armor.getItemDamage();
 						int pct = (dur * 100) / maxDurability;
 						String durStr = (pct < 20 ? "\u00a7c" : (pct < 50 ? "\u00a7e" : "\u00a7a")) + pct + "%";
-						mc.fontRendererObj.drawStringWithShadow(durStr, 20, yOffset + 4, 0xFFFFFF);
+						mc.fontRendererObj.drawStringWithShadow(durStr, 20, yOffset + 5, 0xFFFFFF);
 					}
-					yOffset += 18;
+					yOffset += 22;
 				}
 			}
 			RenderHelper.disableStandardItemLighting();
 			GlStateManager.popMatrix();
 		}
 
-		// 4. Potion HUD
+		// 10. Potion HUD
 		if (PvPClient.instance.pvp_potionHud && mc.thePlayer != null) {
 			java.util.List<PotionEffect> effects = mc.thePlayer.getActivePotionEffectsList();
 			if (!effects.isEmpty()) {
@@ -1427,13 +1477,175 @@ public class GuiIngame extends Gui {
 					String duration = Potion.getDurationString(effect);
 					String text = (potion.isBadEffect() ? "\u00a7c" : "\u00a7b") + name + " \u00a77" + duration;
 
-					drawRect(-2, yOff - 2, mc.fontRendererObj.getStringWidth(text) + 4, yOff + 11, 0x70000000);
-					mc.fontRendererObj.drawStringWithShadow(text, 0, yOff, 0xFFFFFF);
-					yOff += 14;
+					int strW = mc.fontRendererObj.getStringWidth(text);
+					RenderGuiUtils.drawGlassCard(-2, yOff - 2, strW + 6, 14, 3.0F, 0xAA101014, 0x25FFFFFF);
+					mc.fontRendererObj.drawStringWithShadow(text, 1, yOff + 1, 0xFFFFFF);
+					yOff += 16;
 				}
 				GlStateManager.popMatrix();
 			}
 		}
 	}
 
+	private void renderKeyBox(int x, int y, int width, int height, String label, boolean pressed) {
+		int bg = pressed ? 0xBB3B82F6 : 0xAA101014;
+		int outline = pressed ? 0xFF60A5FA : 0x25FFFFFF;
+		RenderGuiUtils.drawGlassCard(x, y, width, height, 3.0F, bg, outline);
+		drawCenteredString(mc.fontRendererObj, label, x + width / 2, y + (height - 8) / 2, pressed ? 0xFFFFFF : 0xEEEEEE);
+	}
+
+	private void renderAnalogClockAndCalendarWidget() {
+		GlStateManager.pushMatrix();
+		GlStateManager.translate((float)PvPClient.instance.calendarX, (float)PvPClient.instance.calendarY, 0.0F);
+		GlStateManager.scale(PvPClient.instance.calendarScale, PvPClient.instance.calendarScale, 1.0F);
+
+		Calendar cal = Calendar.getInstance();
+		int hours = cal.get(Calendar.HOUR);
+		int minutes = cal.get(Calendar.MINUTE);
+		int seconds = cal.get(Calendar.SECOND);
+		int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+		int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+		Calendar firstDayCal = (Calendar) cal.clone();
+		firstDayCal.set(Calendar.DAY_OF_MONTH, 1);
+		int firstDayOfWeek = firstDayCal.get(Calendar.DAY_OF_WEEK) - 1; // 0=Sun, 1=Mon...
+
+		// Total container dimensions
+		int totalW = 168;
+		int totalH = 82;
+		RenderGuiUtils.drawGlassCard(0, 0, totalW, totalH, 6.0F, 0xCC101014, 0x25FFFFFF);
+
+		// --- Left Section: Analog Clock Face ---
+		float clockCenterX = 28.0F;
+		float clockCenterY = 41.0F;
+		float clockRadius = 22.0F;
+
+		// Clock face background & outer rim
+		RenderGuiUtils.drawCircle(clockCenterX, clockCenterY, clockRadius, 0xFF141722);
+		RenderGuiUtils.drawCircleOutline(clockCenterX, clockCenterY, clockRadius, 1.5F, 0xFF35415C);
+
+		// 12-hour tick dots
+		for (int h = 0; h < 12; h++) {
+			double angle = Math.toRadians(h * 30.0 - 90.0);
+			float dotX = clockCenterX + (float) Math.cos(angle) * (clockRadius - 3.5F);
+			float dotY = clockCenterY + (float) Math.sin(angle) * (clockRadius - 3.5F);
+			int dotCol = (h % 3 == 0) ? 0xFF60A5FA : 0x888899B0;
+			RenderGuiUtils.drawCircle(dotX, dotY, (h % 3 == 0) ? 1.2F : 0.8F, dotCol);
+		}
+
+		// Hour Hand (smooth rotation based on hour + minute)
+		double hourAngle = Math.toRadians((hours % 12 + minutes / 60.0) * 30.0 - 90.0);
+		float hx = clockCenterX + (float) Math.cos(hourAngle) * 11.0F;
+		float hy = clockCenterY + (float) Math.sin(hourAngle) * 11.0F;
+		RenderGuiUtils.drawLine(clockCenterX, clockCenterY, hx, hy, 2.0F, 0xFFFFFFFF);
+
+		// Minute Hand
+		double minAngle = Math.toRadians((minutes + seconds / 60.0) * 6.0 - 90.0);
+		float mx = clockCenterX + (float) Math.cos(minAngle) * 16.0F;
+		float my = clockCenterY + (float) Math.sin(minAngle) * 16.0F;
+		RenderGuiUtils.drawLine(clockCenterX, clockCenterY, mx, my, 1.4F, 0xFF38BDF8);
+
+		// Center Pivot Pin
+		RenderGuiUtils.drawCircle(clockCenterX, clockCenterY, 2.2F, 0xFF38BDF8);
+
+		// Digital time subtext under clock
+		String timeShort = String.format("%02d:%02d", (cal.get(Calendar.HOUR_OF_DAY)), minutes);
+		drawCenteredString(mc.fontRendererObj, "\u00a7b" + timeShort, (int) clockCenterX, (int) (clockCenterY + clockRadius + 4), 0xFFFFFF);
+
+		// Vertical divider line
+		RenderGuiUtils.drawLine(58.0F, 6.0F, 58.0F, totalH - 6.0F, 1.0F, 0x30FFFFFF);
+
+		// --- Right Section: Monthly Calendar Grid ---
+		int calLeft = 64;
+		int calTop = 5;
+
+		String[] monthNames = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+		String headerStr = "\u00a7f\u00a7l" + monthNames[cal.get(Calendar.MONTH)] + " \u00a7b" + cal.get(Calendar.YEAR);
+		mc.fontRendererObj.drawStringWithShadow(headerStr, calLeft, calTop, 0xFFFFFF);
+
+		// Weekday header
+		String[] dayLabels = { "S", "M", "T", "W", "T", "F", "S" };
+		int colWidth = 14;
+		int rowHeight = 9;
+		int gridTop = calTop + 12;
+
+		for (int c = 0; c < 7; c++) {
+			int dx = calLeft + c * colWidth;
+			mc.fontRendererObj.drawStringWithShadow("\u00a77" + dayLabels[c], dx + 2, gridTop, 0x888888);
+		}
+
+		// Calendar days grid
+		int currentGridDay = 1;
+		for (int row = 0; row < 5; row++) {
+			int y = gridTop + 10 + row * rowHeight;
+			for (int col = 0; col < 7; col++) {
+				if (row == 0 && col < firstDayOfWeek) continue;
+				if (currentGridDay > daysInMonth) break;
+
+				int x = calLeft + col * colWidth;
+				boolean isToday = (currentGridDay == dayOfMonth);
+
+				if (isToday) {
+					RenderGuiUtils.drawGradientRoundedRect(x - 1, y - 1, colWidth - 1, rowHeight - 1, 2.0F, 0xAA3B82F6, 0x881D4ED8);
+					RenderGuiUtils.drawRoundedOutline(x - 1, y - 1, colWidth - 1, rowHeight - 1, 2.0F, 0.8F, 0xFF60A5FA);
+					mc.fontRendererObj.drawStringWithShadow("\u00a7f" + currentGridDay, x + (currentGridDay < 10 ? 3 : 1), y, 0xFFFFFF);
+				} else {
+					mc.fontRendererObj.drawStringWithShadow("\u00a78" + currentGridDay, x + (currentGridDay < 10 ? 3 : 1), y, 0x999999);
+				}
+				currentGridDay++;
+			}
+		}
+
+		GlStateManager.popMatrix();
+	}
+
+	private void renderCooldownsWidget() {
+		GlStateManager.pushMatrix();
+		GlStateManager.translate((float)PvPClient.instance.cooldownsX, (float)PvPClient.instance.cooldownsY, 0.0F);
+		GlStateManager.scale(PvPClient.instance.cooldownsScale, PvPClient.instance.cooldownsScale, 1.0F);
+
+		// Enderpearl Tracker Card
+		float pearlSec = PvPClient.instance.getPearlRemainingSeconds();
+		float pearlProgress = PvPClient.instance.getPearlCooldownProgress();
+		boolean pearlActive = pearlSec > 0.0F;
+
+		RenderGuiUtils.drawGlassCard(0, 0, 100, 24, 4.0F, 0xAA101014, 0x25FFFFFF);
+		// Pearl Icon / Label
+		RenderHelper.enableGUIStandardItemLighting();
+		mc.getRenderItem().renderItemAndEffectIntoGUI(new ItemStack(net.minecraft.init.Items.ender_pearl), 3, 4);
+		RenderHelper.disableStandardItemLighting();
+
+		if (pearlActive) {
+			String pStr = String.format("\u00a7c%.1fs", pearlSec);
+			mc.fontRendererObj.drawStringWithShadow(pStr, 24, 5, 0xFFFFFF);
+			// Linear progress bar inside card
+			RenderGuiUtils.drawRoundedRect(24, 15, 70, 4, 1.5F, 0x44FFFFFF);
+			RenderGuiUtils.drawGradientRoundedRect(24, 15, 70 * pearlProgress, 4, 1.5F, 0xFFEF4444, 0xFFF59E0B);
+		} else {
+			mc.fontRendererObj.drawStringWithShadow("\u00a7aE-Pearl Ready", 24, 8, 0xFFFFFF);
+		}
+
+		// Golden Apple / Crapple Tracker Card
+		float gappleSec = PvPClient.instance.getGappleRemainingSeconds();
+		boolean gappleActive = gappleSec > 0.0F;
+
+		RenderGuiUtils.drawGlassCard(0, 28, 100, 24, 4.0F, 0xAA101014, 0x25FFFFFF);
+		RenderHelper.enableGUIStandardItemLighting();
+		mc.getRenderItem().renderItemAndEffectIntoGUI(new ItemStack(net.minecraft.init.Items.golden_apple), 3, 32);
+		RenderHelper.disableStandardItemLighting();
+
+		if (gappleActive) {
+			int min = (int) gappleSec / 60;
+			int sec = (int) gappleSec % 60;
+			String gStr = String.format("\u00a7e%d:%02d", min, sec);
+			mc.fontRendererObj.drawStringWithShadow(gStr, 24, 33, 0xFFFFFF);
+			float gProgress = gappleSec / (float) (PvPClient.GAPPLE_DURATION_MS / 1000L);
+			RenderGuiUtils.drawRoundedRect(24, 43, 70, 4, 1.5F, 0x44FFFFFF);
+			RenderGuiUtils.drawGradientRoundedRect(24, 43, 70 * gProgress, 4, 1.5F, 0xFFF59E0B, 0xFF10B981);
+		} else {
+			mc.fontRendererObj.drawStringWithShadow("\u00a76G-Apple Ready", 24, 36, 0xFFFFFF);
+		}
+
+		GlStateManager.popMatrix();
+	}
 }
