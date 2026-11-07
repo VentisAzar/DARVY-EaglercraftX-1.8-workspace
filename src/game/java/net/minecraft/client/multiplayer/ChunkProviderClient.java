@@ -74,13 +74,18 @@ public class ChunkProviderClient implements IChunkProvider {
 	 * false
 	 */
 	public void unloadChunk(int parInt1, int parInt2) {
-		Chunk chunk = this.provideChunk(parInt1, parInt2);
-		if (!chunk.isEmpty()) {
+		Chunk chunk = this.chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(parInt1, parInt2));
+		if (chunk != null && !chunk.isEmpty()) {
 			chunk.onChunkUnload();
+			int idx = this.chunkListing.indexOf(chunk);
+			if (idx != -1) {
+				int lastIdx = this.chunkListing.size() - 1;
+				Chunk last = this.chunkListing.remove(lastIdx);
+				if (idx < lastIdx) {
+					this.chunkListing.set(idx, last);
+				}
+			}
 		}
-
-		this.chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(parInt1, parInt2));
-		this.chunkListing.remove(chunk);
 	}
 
 	/**+

@@ -30,8 +30,7 @@ public class PvPClient {
     public boolean pvp_armorStatus = true;
     public boolean pvp_potionHud = true;
     public boolean pvp_clockHud = true;
-    public boolean pvp_calendarHud = true;
-    public boolean pvp_cooldownsHud = true;
+    public boolean pvp_compassHud = true;
     public boolean pvp_infoPills = true;
     public boolean pvp_customHotbar = true;
     public boolean pvp_chatMacros = true;
@@ -40,6 +39,8 @@ public class PvPClient {
     // Visuals & Customization Modules
     public boolean pvp_fullbright = false;
     public boolean pvp_blockOutline = true;
+    public boolean pvp_motionBlur = false;
+    public int motionBlurStrength = 5; // 1-10
 
     // HUD Positions & Scaling
     public int fpsX = 5, fpsY = 5;
@@ -56,6 +57,9 @@ public class PvPClient {
 
     public int coordsX = 5, coordsY = 73;
     public float coordsScale = 1.0F;
+
+    public int compassX = 0, compassY = 15;
+    public float compassScale = 1.0F;
     
     public int keystrokesX = 5, keystrokesY = 95;
     public float keystrokesScale = 1.0F;
@@ -65,12 +69,6 @@ public class PvPClient {
     
     public int potionX = 5, potionY = 260;
     public float potionScale = 1.0F;
-
-    public int calendarX = 400, calendarY = 5;
-    public float calendarScale = 1.0F;
-
-    public int cooldownsX = 200, cooldownsY = 200;
-    public float cooldownsScale = 1.0F;
 
     public int scoreboardX = 0, scoreboardY = 0;
     public float scoreboardScale = 1.0F;
@@ -183,11 +181,10 @@ public class PvPClient {
         this.pingX = 5; this.pingY = 39; this.pingScale = 1.0F;
         this.clockX = 5; this.clockY = 56; this.clockScale = 1.0F;
         this.coordsX = 5; this.coordsY = 73; this.coordsScale = 1.0F;
+        this.compassX = 0; this.compassY = 15; this.compassScale = 1.0F;
         this.keystrokesX = 5; this.keystrokesY = 95; this.keystrokesScale = 1.0F;
         this.armorX = 5; this.armorY = 180; this.armorScale = 1.0F;
         this.potionX = 5; this.potionY = 260; this.potionScale = 1.0F;
-        this.calendarX = 350; this.calendarY = 5; this.calendarScale = 1.0F;
-        this.cooldownsX = 200; this.cooldownsY = 200; this.cooldownsScale = 1.0F;
         this.scoreboardX = 0; this.scoreboardY = 0; this.scoreboardScale = 1.0F;
     }
 
@@ -202,4 +199,5 @@ public class PvPClient {
     public void toggleSprint() { this.pvp_toggleSprint = !this.pvp_toggleSprint; }
     public void toggleNoHurtCam() { this.pvp_noHurtCam = !this.pvp_noHurtCam; }
     public void toggleLowFire() { this.pvp_lowFire = !this.pvp_lowFire; }
+    public void toggleMotionBlur() { this.pvp_motionBlur = !this.pvp_motionBlur; }
 }

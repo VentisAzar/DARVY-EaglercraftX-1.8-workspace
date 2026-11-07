@@ -13,11 +13,10 @@ public class GuiHudEditor extends GuiScreen {
     private boolean draggingPing = false;
     private boolean draggingClock = false;
     private boolean draggingCoords = false;
+    private boolean draggingCompass = false;
     private boolean draggingKeystrokes = false;
     private boolean draggingArmor = false;
     private boolean draggingPotion = false;
-    private boolean draggingCalendar = false;
-    private boolean draggingCooldowns = false;
     private boolean draggingScoreboard = false;
 
     private int dragOffsetX = 0;
@@ -53,8 +52,8 @@ public class GuiHudEditor extends GuiScreen {
         GlStateManager.enableBlend();
 
         // Control banner
-        RenderGuiUtils.drawGlassCard(width / 2 - 175, 6, 350, 38, 6.0F, 0xDD0D111A, 0xFF1F293D);
-        drawCenteredString(fontRendererObj, "\u00a7f\u00a7lDARVY \u00a7bHUD Studio", width / 2, 12, 0xFFFFFF);
+        RenderGuiUtils.drawBox(width / 2 - 175, 6, 350, 38, 0xDD0D111A, 0xFF1F293D);
+        drawCenteredString(fontRendererObj, "\u00a7f\u00a7lDARVY \u00a7bHUD Editor", width / 2, 12, 0xFFFFFF);
         drawCenteredString(fontRendererObj, "\u00a77Drag widgets to reposition \u00a78| \u00a77Scroll to resize", width / 2, 26, 0xCCCCCC);
 
         // 1. FPS HUD Box
@@ -77,7 +76,7 @@ public class GuiHudEditor extends GuiScreen {
 
         // 4. Clock HUD Box
         if (PvPClient.instance.pvp_clockHud) {
-            drawCard(PvPClient.instance.clockX, PvPClient.instance.clockY, scl(80, PvPClient.instance.clockScale), scl(16, PvPClient.instance.clockScale),
+            drawCard(PvPClient.instance.clockX, PvPClient.instance.clockY, scl(90, PvPClient.instance.clockScale), scl(16, PvPClient.instance.clockScale),
                 draggingClock, 0xFFF59E0B, "Clock (" + pct(PvPClient.instance.clockScale) + "%)");
         }
 
@@ -87,37 +86,33 @@ public class GuiHudEditor extends GuiScreen {
                 draggingCoords, 0xFF38BDF8, "Coordinates (" + pct(PvPClient.instance.coordsScale) + "%)");
         }
 
-        // 6. Keystrokes Box
+        // 6. Compass HUD Box
+        if (PvPClient.instance.pvp_compassHud) {
+            int cx = width / 2 + PvPClient.instance.compassX - scl(45, PvPClient.instance.compassScale);
+            int cy = PvPClient.instance.compassY;
+            drawCard(cx, cy, scl(90, PvPClient.instance.compassScale), scl(16, PvPClient.instance.compassScale),
+                draggingCompass, 0xFF38BDF8, "Compass (" + pct(PvPClient.instance.compassScale) + "%)");
+        }
+
+        // 7. Keystrokes Box
         if (PvPClient.instance.pvp_keystrokesHud) {
             drawCard(PvPClient.instance.keystrokesX, PvPClient.instance.keystrokesY, scl(54, PvPClient.instance.keystrokesScale), scl(66, PvPClient.instance.keystrokesScale),
                 draggingKeystrokes, 0xFF8B5CF6, "Keystrokes");
         }
 
-        // 7. Armor HUD Box
+        // 8. Armor HUD Box
         if (PvPClient.instance.pvp_armorStatus) {
             drawCard(PvPClient.instance.armorX, PvPClient.instance.armorY, scl(65, PvPClient.instance.armorScale), scl(88, PvPClient.instance.armorScale),
                 draggingArmor, 0xFF06B6D4, "Armor Status");
         }
 
-        // 8. Potion HUD Box
+        // 9. Potion HUD Box
         if (PvPClient.instance.pvp_potionHud) {
             drawCard(PvPClient.instance.potionX, PvPClient.instance.potionY, scl(85, PvPClient.instance.potionScale), scl(45, PvPClient.instance.potionScale),
                 draggingPotion, 0xFFEC4899, "Potion Status");
         }
 
-        // 9. Calendar & Clock Widget Box
-        if (PvPClient.instance.pvp_calendarHud) {
-            drawCard(PvPClient.instance.calendarX, PvPClient.instance.calendarY, scl(168, PvPClient.instance.calendarScale), scl(82, PvPClient.instance.calendarScale),
-                draggingCalendar, 0xFF60A5FA, "Clock & Calendar");
-        }
-
-        // 10. Cooldowns Widget Box
-        if (PvPClient.instance.pvp_cooldownsHud) {
-            drawCard(PvPClient.instance.cooldownsX, PvPClient.instance.cooldownsY, scl(100, PvPClient.instance.cooldownsScale), scl(54, PvPClient.instance.cooldownsScale),
-                draggingCooldowns, 0xFFEF4444, "Cooldown Trackers");
-        }
-
-        // 11. Scoreboard Box
+        // 10. Scoreboard Box
         int sx = width - 100 + PvPClient.instance.scoreboardX;
         int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
         drawCard(sx, sy, scl(95, PvPClient.instance.scoreboardScale), scl(100, PvPClient.instance.scoreboardScale),
@@ -129,11 +124,13 @@ public class GuiHudEditor extends GuiScreen {
         else if (draggingPing) { PvPClient.instance.pingX = mouseX - dragOffsetX; PvPClient.instance.pingY = mouseY - dragOffsetY; }
         else if (draggingClock) { PvPClient.instance.clockX = mouseX - dragOffsetX; PvPClient.instance.clockY = mouseY - dragOffsetY; }
         else if (draggingCoords) { PvPClient.instance.coordsX = mouseX - dragOffsetX; PvPClient.instance.coordsY = mouseY - dragOffsetY; }
+        else if (draggingCompass) {
+            PvPClient.instance.compassX = mouseX - dragOffsetX - width / 2 + scl(45, PvPClient.instance.compassScale);
+            PvPClient.instance.compassY = mouseY - dragOffsetY;
+        }
         else if (draggingKeystrokes) { PvPClient.instance.keystrokesX = mouseX - dragOffsetX; PvPClient.instance.keystrokesY = mouseY - dragOffsetY; }
         else if (draggingArmor) { PvPClient.instance.armorX = mouseX - dragOffsetX; PvPClient.instance.armorY = mouseY - dragOffsetY; }
         else if (draggingPotion) { PvPClient.instance.potionX = mouseX - dragOffsetX; PvPClient.instance.potionY = mouseY - dragOffsetY; }
-        else if (draggingCalendar) { PvPClient.instance.calendarX = mouseX - dragOffsetX; PvPClient.instance.calendarY = mouseY - dragOffsetY; }
-        else if (draggingCooldowns) { PvPClient.instance.cooldownsX = mouseX - dragOffsetX; PvPClient.instance.cooldownsY = mouseY - dragOffsetY; }
         else if (draggingScoreboard) {
             PvPClient.instance.scoreboardX = mouseX - dragOffsetX - (width - 100);
             PvPClient.instance.scoreboardY = mouseY - dragOffsetY - (height / 2 - 50);
@@ -144,7 +141,7 @@ public class GuiHudEditor extends GuiScreen {
 
     private void drawCard(int x, int y, int w, int h, boolean dragging, int accentColor, String label) {
         int bg = dragging ? ((accentColor & 0x00FFFFFF) | 0x99000000) : ((accentColor & 0x00FFFFFF) | 0x44000000);
-        RenderGuiUtils.drawGlassCard(x, y, w, h, 4.0F, bg, accentColor);
+        RenderGuiUtils.drawBox(x, y, w, h, bg, accentColor);
         fontRendererObj.drawStringWithShadow("\u00a7f" + label, x + 3, y + (h > 18 ? 4 : (h - 8) / 2), 0xFFFFFF);
     }
 
@@ -163,13 +160,16 @@ public class GuiHudEditor extends GuiScreen {
             if (tryScale(PvPClient.instance.fpsX, PvPClient.instance.fpsY, 65, 16, PvPClient.instance.fpsScale, mx, my)) { PvPClient.instance.fpsScale = clampScale(PvPClient.instance.fpsScale + delta); return; }
             if (tryScale(PvPClient.instance.cpsX, PvPClient.instance.cpsY, 82, 16, PvPClient.instance.cpsScale, mx, my)) { PvPClient.instance.cpsScale = clampScale(PvPClient.instance.cpsScale + delta); return; }
             if (tryScale(PvPClient.instance.pingX, PvPClient.instance.pingY, 70, 16, PvPClient.instance.pingScale, mx, my)) { PvPClient.instance.pingScale = clampScale(PvPClient.instance.pingScale + delta); return; }
-            if (tryScale(PvPClient.instance.clockX, PvPClient.instance.clockY, 80, 16, PvPClient.instance.clockScale, mx, my)) { PvPClient.instance.clockScale = clampScale(PvPClient.instance.clockScale + delta); return; }
+            if (tryScale(PvPClient.instance.clockX, PvPClient.instance.clockY, 90, 16, PvPClient.instance.clockScale, mx, my)) { PvPClient.instance.clockScale = clampScale(PvPClient.instance.clockScale + delta); return; }
             if (tryScale(PvPClient.instance.coordsX, PvPClient.instance.coordsY, 120, 16, PvPClient.instance.coordsScale, mx, my)) { PvPClient.instance.coordsScale = clampScale(PvPClient.instance.coordsScale + delta); return; }
+            
+            int cx = width / 2 + PvPClient.instance.compassX - scl(45, PvPClient.instance.compassScale);
+            int cy = PvPClient.instance.compassY;
+            if (tryScale(cx, cy, 90, 16, PvPClient.instance.compassScale, mx, my)) { PvPClient.instance.compassScale = clampScale(PvPClient.instance.compassScale + delta); return; }
+
             if (tryScale(PvPClient.instance.keystrokesX, PvPClient.instance.keystrokesY, 54, 66, PvPClient.instance.keystrokesScale, mx, my)) { PvPClient.instance.keystrokesScale = clampScale(PvPClient.instance.keystrokesScale + delta); return; }
             if (tryScale(PvPClient.instance.armorX, PvPClient.instance.armorY, 65, 88, PvPClient.instance.armorScale, mx, my)) { PvPClient.instance.armorScale = clampScale(PvPClient.instance.armorScale + delta); return; }
             if (tryScale(PvPClient.instance.potionX, PvPClient.instance.potionY, 85, 45, PvPClient.instance.potionScale, mx, my)) { PvPClient.instance.potionScale = clampScale(PvPClient.instance.potionScale + delta); return; }
-            if (tryScale(PvPClient.instance.calendarX, PvPClient.instance.calendarY, 168, 82, PvPClient.instance.calendarScale, mx, my)) { PvPClient.instance.calendarScale = clampScale(PvPClient.instance.calendarScale + delta); return; }
-            if (tryScale(PvPClient.instance.cooldownsX, PvPClient.instance.cooldownsY, 100, 54, PvPClient.instance.cooldownsScale, mx, my)) { PvPClient.instance.cooldownsScale = clampScale(PvPClient.instance.cooldownsScale + delta); return; }
 
             int sx = width - 100 + PvPClient.instance.scoreboardX;
             int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
@@ -191,13 +191,16 @@ public class GuiHudEditor extends GuiScreen {
             if (tryDrag(PvPClient.instance.fpsX, PvPClient.instance.fpsY, 65, 16, PvPClient.instance.fpsScale, mx, my)) { draggingFps = true; super.mouseClicked(mx, my, btn); return; }
             if (tryDrag(PvPClient.instance.cpsX, PvPClient.instance.cpsY, 82, 16, PvPClient.instance.cpsScale, mx, my)) { draggingCps = true; super.mouseClicked(mx, my, btn); return; }
             if (tryDrag(PvPClient.instance.pingX, PvPClient.instance.pingY, 70, 16, PvPClient.instance.pingScale, mx, my)) { draggingPing = true; super.mouseClicked(mx, my, btn); return; }
-            if (tryDrag(PvPClient.instance.clockX, PvPClient.instance.clockY, 80, 16, PvPClient.instance.clockScale, mx, my)) { draggingClock = true; super.mouseClicked(mx, my, btn); return; }
+            if (tryDrag(PvPClient.instance.clockX, PvPClient.instance.clockY, 90, 16, PvPClient.instance.clockScale, mx, my)) { draggingClock = true; super.mouseClicked(mx, my, btn); return; }
             if (tryDrag(PvPClient.instance.coordsX, PvPClient.instance.coordsY, 120, 16, PvPClient.instance.coordsScale, mx, my)) { draggingCoords = true; super.mouseClicked(mx, my, btn); return; }
+            
+            int cx = width / 2 + PvPClient.instance.compassX - scl(45, PvPClient.instance.compassScale);
+            int cy = PvPClient.instance.compassY;
+            if (tryDrag(cx, cy, 90, 16, PvPClient.instance.compassScale, mx, my)) { draggingCompass = true; super.mouseClicked(mx, my, btn); return; }
+
             if (tryDrag(PvPClient.instance.keystrokesX, PvPClient.instance.keystrokesY, 54, 66, PvPClient.instance.keystrokesScale, mx, my)) { draggingKeystrokes = true; super.mouseClicked(mx, my, btn); return; }
             if (tryDrag(PvPClient.instance.armorX, PvPClient.instance.armorY, 65, 88, PvPClient.instance.armorScale, mx, my)) { draggingArmor = true; super.mouseClicked(mx, my, btn); return; }
             if (tryDrag(PvPClient.instance.potionX, PvPClient.instance.potionY, 85, 45, PvPClient.instance.potionScale, mx, my)) { draggingPotion = true; super.mouseClicked(mx, my, btn); return; }
-            if (tryDrag(PvPClient.instance.calendarX, PvPClient.instance.calendarY, 168, 82, PvPClient.instance.calendarScale, mx, my)) { draggingCalendar = true; super.mouseClicked(mx, my, btn); return; }
-            if (tryDrag(PvPClient.instance.cooldownsX, PvPClient.instance.cooldownsY, 100, 54, PvPClient.instance.cooldownsScale, mx, my)) { draggingCooldowns = true; super.mouseClicked(mx, my, btn); return; }
 
             int sx = width - 100 + PvPClient.instance.scoreboardX;
             int sy = height / 2 - 50 + PvPClient.instance.scoreboardY;
@@ -223,11 +226,10 @@ public class GuiHudEditor extends GuiScreen {
         draggingPing = false;
         draggingClock = false;
         draggingCoords = false;
+        draggingCompass = false;
         draggingKeystrokes = false;
         draggingArmor = false;
         draggingPotion = false;
-        draggingCalendar = false;
-        draggingCooldowns = false;
         draggingScoreboard = false;
         super.mouseReleased(mx, my, state);
     }

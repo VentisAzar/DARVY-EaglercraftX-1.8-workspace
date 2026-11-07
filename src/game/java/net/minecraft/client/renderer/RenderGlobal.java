@@ -1505,10 +1505,12 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 	public void updateChunks(long finishTimeNano) {
 		this.displayListEntitiesDirty |= this.renderDispatcher.updateChunks(finishTimeNano);
 		if (!this.chunksToUpdate.isEmpty()) {
-			SodiumOptimizer.instance.pendingChunkRebuilds = this.chunksToUpdate.size();
+			int pending = this.chunksToUpdate.size();
+			SodiumOptimizer.instance.pendingChunkRebuilds = pending;
 			Iterator iterator = this.chunksToUpdate.iterator();
 			int processedThisFrame = 0;
-			int maxBudget = SodiumOptimizer.instance.sodiumChunkRebuilding ? SodiumOptimizer.instance.rebuildBudget : 999;
+			// Adaptive budget: scale dynamically based on pending queue size for faster chunk loading
+			int maxBudget = pending > 64 ? 48 : (pending > 32 ? 32 : 16);
 
 			while (iterator.hasNext() && processedThisFrame < maxBudget) {
 				RenderChunk renderchunk = (RenderChunk) iterator.next();
@@ -1520,7 +1522,7 @@ public class RenderGlobal implements IWorldAccess, IResourceManagerReloadListene
 				iterator.remove();
 				processedThisFrame++;
 				long i = finishTimeNano - EagRuntime.nanoTime();
-				if (i < 0L) {
+				if (i < 0L && processedThisFrame >= 12) {
 					break;
 				}
 			}

@@ -938,6 +938,7 @@ public class EntityRenderer implements IResourceManagerReloadListener {
 				long k = Math.max((long) (1000000000 / i / 4) - j, 0L);
 				this.renderWorld(parFloat1, EagRuntime.nanoTime() + k);
 				this.renderEndNanoTime = EagRuntime.nanoTime();
+				MotionBlurRenderer.applyMotionBlur();
 				final boolean b = !this.mc.gameSettings.hideGUI || this.mc.currentScreen != null;
 				if (b) {
 					GlStateManager.alphaFunc(GL_GREATER, 0.1F);
